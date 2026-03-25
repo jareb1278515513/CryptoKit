@@ -2,6 +2,10 @@
 
 > 目标：按课程要求完成密码算法实现、可调用接口、可测执行流程与报告交付。
 
+> 过程约定：每个阶段完成后，必须同步更新手动测试步骤与预期结果，见 doc/manual_test.md。还要更新todo.md
+
+
+
 ## 0. 项目骨架与规范
 - [x] 建立分层目录（interfaces/application/domain/infrastructure/shared）
 - [x] 建立测试分层目录（unit/integration/e2e）
@@ -11,18 +15,18 @@
 
 ## 1. 工程依赖与运行基线
 - [ ] 在 pyproject.toml 中补充运行依赖（cryptography、pycryptodome、gmssl）
-- [ ] 在 pyproject.toml 中补充开发依赖（pytest、ruff）
-- [ ] 配置并验证 `uv run` 运行入口
-- [ ] 配置并验证 `uv run pytest` 测试入口
+- [x] 在 pyproject.toml 中补充开发依赖（pytest、ruff）
+- [x] 配置并验证 `uv run` 运行入口
+- [x] 配置并验证 `uv run pytest` 测试入口
 
 ## 2. 编码与哈希模块（优先）
-- [ ] 实现 Base64 编码/解码
-- [ ] 实现 UTF-8 编码/解码与异常处理
-- [ ] 实现 SHA1/SHA256/SHA3
-- [ ] 实现 HmacSHA1/HmacSHA256
-- [ ] 实现 PBKDF2
+- [x] 实现 Base64 编码/解码
+- [x] 实现 UTF-8 编码/解码与异常处理
+- [x] 实现 SHA1/SHA256/SHA3
+- [x] 实现 HmacSHA1/HmacSHA256
+- [x] 实现 PBKDF2
 - [ ] 实现 RIPEMD160（含可用性降级方案）
-- [ ] 编写对应单元测试（正常/异常/边界）
+- [x] 编写对应单元测试（正常/异常/边界）
 
 ## 3. 对称加密模块
 - [ ] 实现 AES（ECB/CBC/CTR，含 IV 与 padding 约束）
@@ -40,11 +44,11 @@
 - [ ] 编写公钥算法单元测试
 
 ## 5. 应用层与接口层
-- [ ] 设计并实现统一 OperationResult 返回规范
+- [x] 设计并实现统一 OperationResult 返回规范
 - [ ] 建立 application/use_cases 编排流程（encrypt/decrypt/sign/verify/hash）
-- [ ] 暴露 Python API（interfaces/api）
-- [ ] 暴露 CLI 命令（interfaces/cli）
-- [ ] 保证 API 与 CLI 输出一致性
+- [x] 暴露 Python API（interfaces/api）
+- [x] 暴露 CLI 命令（interfaces/cli）
+- [x] 保证 API 与 CLI 输出一致性
 
 ## 6. 端到端验证
 - [ ] 编写 integration 测试（跨层流程）
@@ -61,8 +65,15 @@
 - [ ] 完成课程 PDF 报告提纲（对应评分五项）
 
 ## 8. 里程碑（建议）
-- [ ] M1：完成编码与哈希 + 单测通过
+- [x] M1：完成编码与哈希 + 单测通过
 - [ ] M2：完成对称加密 + 单测通过
 - [ ] M3：完成公钥算法 + 单测通过
 - [ ] M4：完成 API/CLI + integration/e2e 通过
 - [ ] M5：完成文档与报告材料
+
+## 9. 阶段手动测试同步
+- [x] M1 手动测试步骤已记录到 doc/manual_test.md
+- [ ] M2 手动测试步骤已记录到 doc/manual_test.md
+- [ ] M3 手动测试步骤已记录到 doc/manual_test.md
+- [ ] M4 手动测试步骤已记录到 doc/manual_test.md
+- [ ] M5 手动测试步骤已记录到 doc/manual_test.md

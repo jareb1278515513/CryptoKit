@@ -1,7 +1,19 @@
 [project]
 name = "cryptokit"
 version = "0.1.0"
-description = "Add your description here"
+description = "Course cryptography toolkit with Python API and CLI"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = []
+
+[project.scripts]
+cryptokit = "main:main"
+
+[dependency-groups]
+dev = [
+	"pytest>=8.4.0",
+	"ruff>=0.13.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

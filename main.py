@@ -1,6 +1,9 @@
-def main():
-    print("Hello from cryptokit!")
+from cryptokit.interfaces.cli import run_cli
+
+
+def main() -> int:
+    return run_cli()
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
