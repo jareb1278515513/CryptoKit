@@ -1,1 +1,1 @@
-"""Application layer orchestrations."""
+"""应用层：负责跨领域用例编排。"""

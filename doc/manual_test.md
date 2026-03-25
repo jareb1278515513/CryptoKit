@@ -244,3 +244,58 @@ uv run python main.py ecdsa-verify --payload hello --signature <sig> --public-ke
 - RSA-1024：密钥生成、加解密、RSA-SHA1 签名验签全部可用。
 - ECC-160（SECP160r1，对应 NIST P-160）：密钥生成、ECDSA-SHA1 签名验签可用。
 - API 与 CLI 均可调用，返回统一结构。
+
+## M4: 应用层与接口层（use_cases + integration/e2e）
+
+### 1) 自动化测试
+- 命令：
+
+```bash
+uv run pytest -q tests/integration tests/e2e
+```
+
+- 预期结果：全部通过。
+
+### 2) 手动一致性验证（API 与 CLI）
+- 命令（CLI）：
+
+```bash
+uv run python main.py hash --text abc --algorithm sha256 --output hex
+```
+
+- 命令（API）：
+
+```bash
+uv run python -c "from cryptokit.interfaces.api import api_hash_text; print(api_hash_text('abc', algorithm='sha256', output='hex').to_dict())"
+```
+
+- 预期结果：
+  - 两次输出的 data.value 相同。
+
+### 3) 端到端验证（RSA CLI 流程）
+- 命令：
+
+```bash
+uv run python main.py rsa-generate
+```
+
+- 预期结果：
+  - 返回 code=200，包含 public_key_pem/private_key_pem。
+
+```bash
+# 将私钥、公钥分别保存为 /tmp/rsa_pri.pem /tmp/rsa_pub.pem
+uv run python main.py rsa-sign --payload hello --private-key-file /tmp/rsa_pri.pem
+```
+
+```bash
+# 将签名替换到 <sig>
+uv run python main.py rsa-verify --payload hello --signature <sig> --public-key-file /tmp/rsa_pub.pem
+```
+
+- 预期结果：
+  - 验签返回 code=200，data.verified=true。
+
+### 4) M4 验收标准
+- interfaces 层不直接编排 domain，统一经 application/use_cases 调用。
+- integration 与 e2e 测试通过。
+- API 与 CLI 关键路径输出一致。

@@ -46,16 +46,16 @@
 
 ## 5. 应用层与接口层
 - [x] 设计并实现统一 OperationResult 返回规范
-- [ ] 建立 application/use_cases 编排流程（encrypt/decrypt/sign/verify/hash）
+- [x] 建立 application/use_cases 编排流程（encrypt/decrypt/sign/verify/hash）
 - [x] 暴露 Python API（interfaces/api）
 - [x] 暴露 CLI 命令（interfaces/cli）
 - [x] 保证 API 与 CLI 输出一致性
 
 ## 6. 端到端验证
-- [ ] 编写 integration 测试（跨层流程）
-- [ ] 编写 e2e 测试（CLI/API 调用）
+- [x] 编写 integration 测试（跨层流程）
+- [x] 编写 e2e 测试（CLI/API 调用）
 - [ ] 校验错误码覆盖（输入错误、密钥错误、模式错误）
-- [ ] 形成可复现实验命令清单
+- [x] 形成可复现实验命令清单
 
 ## 7. 文档与报告交付
 - [x] 完成项目设计计划文档
@@ -69,12 +69,12 @@
 - [x] M1：完成编码与哈希 + 单测通过
 - [x] M2：完成对称加密 + 单测通过
 - [x] M3：完成公钥算法 + 单测通过
-- [ ] M4：完成 API/CLI + integration/e2e 通过
+- [x] M4：完成 API/CLI + integration/e2e 通过
 - [ ] M5：完成文档与报告材料
 
 ## 9. 阶段手动测试同步
 - [x] M1 手动测试步骤已记录到 doc/manual_test.md
 - [x] M2 手动测试步骤已记录到 doc/manual_test.md
 - [x] M3 手动测试步骤已记录到 doc/manual_test.md
-- [ ] M4 手动测试步骤已记录到 doc/manual_test.md
+- [x] M4 手动测试步骤已记录到 doc/manual_test.md
 - [ ] M5 手动测试步骤已记录到 doc/manual_test.md
