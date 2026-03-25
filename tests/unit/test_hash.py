@@ -10,6 +10,12 @@ def test_sha256_hash_vector() -> None:
     )
 
 
+def test_ripemd160_hash_vector() -> None:
+    result = api_hash_text("abc", algorithm="ripemd160", output="hex")
+    assert result.ok
+    assert result.data["value"] == "8eb208f7e05d987a9b044a8e98c6b087f15a0bfc"
+
+
 def test_hmac_sha1_vector() -> None:
     result = api_hmac_text("The quick brown fox", key="key", algorithm="sha1", output="hex")
     assert result.ok

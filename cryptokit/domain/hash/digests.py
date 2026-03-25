@@ -22,14 +22,30 @@ def _require_algorithm(algorithm: str) -> str:
     lowered = algorithm.lower()
     if lowered not in SUPPORTED_DIGESTS:
         raise HashError(f"unsupported digest algorithm: {algorithm}")
-    if lowered == "ripemd160" and "ripemd160" not in hashlib.algorithms_available:
-        raise HashError("ripemd160 is not available in current runtime")
     return lowered
+
+
+def _ripemd160_digest(raw: bytes) -> bytes:
+    payload = bytes(raw)
+
+    if "ripemd160" in hashlib.algorithms_available:
+        return hashlib.new("ripemd160", payload).digest()
+
+    try:
+        from Crypto.Hash import RIPEMD160  # type: ignore[import-not-found]
+    except Exception as exc:
+        raise HashError(
+            "ripemd160 is unavailable: neither hashlib nor pycryptodome backend found"
+        ) from exc
+
+    return RIPEMD160.new(payload).digest()
 
 
 def digest(raw: bytes, algorithm: str) -> bytes:
     algo = _require_algorithm(algorithm)
     try:
+        if algo == "ripemd160":
+            return _ripemd160_digest(raw)
         return hashlib.new(algo, bytes(raw)).digest()
     except (TypeError, ValueError) as exc:
         raise HashError("invalid digest input") from exc

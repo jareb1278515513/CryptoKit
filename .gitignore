@@ -9,3 +9,4 @@ wheels/
 # Virtual environments
 .venv
 doc/example
+doc/requirements/

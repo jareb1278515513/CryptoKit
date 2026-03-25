@@ -11,6 +11,8 @@ from cryptokit.interfaces.api import (
 	api_hash_text,
 	api_hmac_text,
 	api_pbkdf2,
+	api_symmetric_decrypt,
+	api_symmetric_encrypt,
 	api_utf8_decode,
 	api_utf8_encode,
 )
@@ -53,6 +55,24 @@ def build_parser() -> argparse.ArgumentParser:
 	pbkdf2_parser.add_argument("--algorithm", default="sha256")
 	pbkdf2_parser.add_argument("--output", default="hex", choices=["raw", "hex", "base64"])
 
+	sym_encrypt_parser = subparsers.add_parser("symmetric-encrypt")
+	sym_encrypt_parser.add_argument("--algorithm", required=True, choices=["aes", "sm4", "rc6"])
+	sym_encrypt_parser.add_argument("--mode", default="ecb", choices=["ecb", "cbc", "ctr"])
+	sym_encrypt_parser.add_argument("--payload", required=True)
+	sym_encrypt_parser.add_argument("--key-hex", required=True)
+	sym_encrypt_parser.add_argument("--iv-hex")
+	sym_encrypt_parser.add_argument("--input-encoding", default="utf8", choices=["utf8", "hex", "base64"])
+	sym_encrypt_parser.add_argument("--output", default="hex", choices=["hex", "base64"])
+
+	sym_decrypt_parser = subparsers.add_parser("symmetric-decrypt")
+	sym_decrypt_parser.add_argument("--algorithm", required=True, choices=["aes", "sm4", "rc6"])
+	sym_decrypt_parser.add_argument("--mode", default="ecb", choices=["ecb", "cbc", "ctr"])
+	sym_decrypt_parser.add_argument("--payload", required=True)
+	sym_decrypt_parser.add_argument("--key-hex", required=True)
+	sym_decrypt_parser.add_argument("--iv-hex")
+	sym_decrypt_parser.add_argument("--input-encoding", default="hex", choices=["hex", "base64"])
+	sym_decrypt_parser.add_argument("--output", default="utf8", choices=["utf8", "hex", "base64"])
+
 	return parser
 
 
@@ -75,6 +95,26 @@ def run_cli(argv: list[str] | None = None) -> int:
 			args.text,
 			key=args.key,
 			algorithm=args.algorithm,
+			output=args.output,
+		)
+	elif args.command == "symmetric-encrypt":
+		result = api_symmetric_encrypt(
+			args.payload,
+			algorithm=args.algorithm,
+			mode=args.mode,
+			key_hex=args.key_hex,
+			iv_hex=args.iv_hex,
+			input_encoding=args.input_encoding,
+			output=args.output,
+		)
+	elif args.command == "symmetric-decrypt":
+		result = api_symmetric_decrypt(
+			args.payload,
+			algorithm=args.algorithm,
+			mode=args.mode,
+			key_hex=args.key_hex,
+			iv_hex=args.iv_hex,
+			input_encoding=args.input_encoding,
 			output=args.output,
 		)
 	else:
