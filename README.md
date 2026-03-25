@@ -1,18 +1,36 @@
 # CryptoKit
 
-CryptoKit 是一个密码学工具箱，提供统一的 Python API 与 CLI，覆盖常见编码、哈希、对称加密、公钥加密与数字签名能力。
+<div align="center">
+  <p><strong>统一 Python API 与 CLI 的密码学工具箱</strong></p>
+  <p>覆盖编码、哈希、对称加密、公钥加密与数字签名，支持可见执行过程与第三方接口调用。</p>
+</div>
 
+---
 
-## 功能清单
+## 目录
 
-- 编码：UTF-8 编码/解码、Base64 编码/解码
-- 哈希：SHA1、SHA256、SHA3-256、SHA3-512、RIPEMD160
-- HMAC：HMAC-SHA1、HMAC-SHA256
-- KDF：PBKDF2（SHA1/SHA256）
-- 对称加密：AES（ECB/CBC/CTR）、SM4、RC6
-- 非对称与签名：RSA-1024、RSA-SHA1、ECC-160、ECDSA-SHA1
-- 可视化过程：`--trace` 输出关键执行步骤
-- 统一响应：`OperationResult`，结构为 `code/message/data`
+- [功能概览](#功能概览)
+- [环境与安装](#环境与安装)
+- [快速验证](#快速验证)
+- [CLI 使用说明](#cli-使用说明)
+- [Python API 使用示例](#python-api-使用示例)
+- [第三方接口调用（课程要求对照）](#第三方接口调用课程要求对照)
+- [返回结构与错误码](#返回结构与错误码)
+- [项目结构与分层设计](#项目结构与分层设计)
+- [开发与测试](#开发与测试)
+
+## 功能概览
+
+| 分类 | 支持内容 | 说明 |
+| --- | --- | --- |
+| 编码 | UTF-8、Base64 | 支持编码与解码 |
+| 哈希 | SHA1、SHA256、SHA3-256、SHA3-512、RIPEMD160 | 文本摘要 |
+| HMAC | HMAC-SHA1、HMAC-SHA256 | 消息认证码 |
+| KDF | PBKDF2（SHA1/SHA256） | 口令派生 |
+| 对称加密 | AES（ECB/CBC/CTR）、SM4、RC6 | 加密与解密 |
+| 非对称与签名 | RSA-1024、RSA-SHA1、ECC-160、ECDSA-SHA1 | 密钥、签名、验签 |
+| 过程可见性 | --trace | 输出关键执行步骤 |
+| 统一响应 | OperationResult | 结构为 code/message/data |
 
 ## 环境与安装
 
@@ -46,15 +64,14 @@ uv run pytest -q
 ### 通用规则
 
 - 所有命令输出 JSON。
-- 成功时 `code=200`。
-- 失败时 `code` 为对应错误码，`message` 含中文错误说明。
-- 在主命令后追加 `--trace` 可查看执行过程。
+- 成功时 code=200。
+- 失败时 code 为对应错误码，message 为中文说明。
+- 在主命令后追加 --trace 可查看执行过程。
 
 ### 每种算法运行示例
 
-以下示例均可直接在项目根目录执行。
-
-#### 1) 编码算法
+<details>
+<summary><strong>1) 编码算法</strong></summary>
 
 UTF-8 编码：
 
@@ -80,7 +97,10 @@ Base64 解码：
 uv run python main.py base64-decode --payload aGVsbG8=
 ```
 
-#### 2) 哈希算法
+</details>
+
+<details>
+<summary><strong>2) 哈希算法</strong></summary>
 
 SHA1：
 
@@ -112,7 +132,10 @@ RIPEMD160：
 uv run python main.py hash --text abc --algorithm ripemd160 --output hex
 ```
 
-#### 3) HMAC 与 KDF
+</details>
+
+<details>
+<summary><strong>3) HMAC 与 KDF</strong></summary>
 
 HMAC-SHA1：
 
@@ -138,7 +161,10 @@ PBKDF2-HMAC-SHA256：
 uv run python main.py pbkdf2 --password password --salt salt --iterations 1000 --dklen 32 --algorithm sha256 --output hex
 ```
 
-#### 4) 对称加密算法
+</details>
+
+<details>
+<summary><strong>4) 对称加密算法</strong></summary>
 
 AES-CBC 加密：
 
@@ -189,7 +215,10 @@ uv run python main.py symmetric-encrypt \
   --output hex
 ```
 
-#### 5) 非对称与签名算法
+</details>
+
+<details>
+<summary><strong>5) 非对称与签名算法</strong></summary>
 
 RSA-1024 密钥生成：
 
@@ -239,12 +268,17 @@ ECDSA-SHA1 验签：
 uv run python main.py ecdsa-verify --payload hello --signature <ecdsa签名base64> --public-key-file /tmp/ecc_pub.pem --input-encoding utf8 --signature-encoding base64
 ```
 
-#### 6) Trace 可见过程
+</details>
+
+<details>
+<summary><strong>6) Trace 可见过程</strong></summary>
 
 ```bash
 uv run python main.py --trace hash --text hello --algorithm sha256
 uv run python main.py --trace symmetric-encrypt --algorithm aes --mode cbc --payload hello --key-hex 00112233445566778899aabbccddeeff --iv-hex 000102030405060708090a0b0c0d0e0f --output hex
 ```
+
+</details>
 
 ## Python API 使用示例
 
@@ -282,9 +316,9 @@ print(api_rsa_generate_keypair(bits=1024).to_dict())
 - [examples/third_party_clients](examples/third_party_clients)
 - [examples/third_party_clients/README.md](examples/third_party_clients/README.md)
 
-该目录中的脚本从“第三方程序”视角调用 API，并展示以下能力：
+该目录中的脚本从第三方程序视角调用 API，并展示以下能力：
 
-- 调用接口并获取统一结果结构：`code/message/data`
+- 调用接口并获取统一结果结构：code/message/data
 - 基于状态码进行分支处理（成功、失败、拒绝请求等）
 - 覆盖全部算法类别（编码、哈希、HMAC/KDF、对称、公钥与签名）
 
@@ -320,12 +354,14 @@ uv run python examples/third_party_clients/asymmetric_client.py
 
 ### 常见错误码
 
-- `200`：成功
-- `400`：输入错误（参数格式、编码内容非法）
-- `401`：密钥错误（密钥长度或密钥格式不符合要求）
-- `402`：模式错误（不支持的算法模式组合）
-- `500`：算法执行失败（通用加密异常）
-- `501`：编码/解码错误
+| 状态码 | 含义 |
+| --- | --- |
+| 200 | 成功 |
+| 400 | 输入错误（参数格式、编码内容非法） |
+| 401 | 密钥错误（密钥长度或密钥格式不符合要求） |
+| 402 | 模式错误（不支持的算法模式组合） |
+| 500 | 算法执行失败（通用加密异常） |
+| 501 | 编码/解码错误 |
 
 ## 项目结构与分层设计
 
@@ -333,22 +369,22 @@ uv run python examples/third_party_clients/asymmetric_client.py
 
 ```text
 cryptokit/
-  application/   # 用例编排与 DTO
-  domain/        # 算法核心实现
-  infrastructure/# 后端能力扩展位
-  interfaces/    # CLI/API 入口
-  shared/        # 共享类型、错误码、返回结构
-tests/           # unit/integration/e2e
-doc/             # 项目文档与手动测试说明
+  application/    # 用例编排与 DTO
+  domain/         # 算法核心实现
+  infrastructure/ # 后端能力扩展位
+  interfaces/     # CLI/API 入口
+  shared/         # 共享类型、错误码、返回结构
+tests/            # unit/integration/e2e
+doc/              # 项目文档与手动测试说明
 ```
 
 ### 分层职责
 
-- `interfaces`：参数解析、输入输出适配。
-- `application`：业务流程编排、错误码映射、结果封装。
-- `domain`：算法实现与密码规则。
-- `infrastructure`：可替换实现、外部能力接入点。
-- `shared`：跨层复用组件。
+- interfaces：参数解析、输入输出适配。
+- application：业务流程编排、错误码映射、结果封装。
+- domain：算法实现与密码规则。
+- infrastructure：可替换实现、外部能力接入点。
+- shared：跨层复用组件。
 
 ### 依赖关系图
 
@@ -364,8 +400,8 @@ flowchart TD
 
 依赖规则：
 
-- 正向依赖为 `interfaces -> application -> domain`。
-- `shared` 允许被 `application` 与 `domain` 复用。
+- 正向依赖为 interfaces -> application -> domain。
+- shared 允许被 application 与 domain 复用。
 - 避免反向依赖和跨层直连。
 
 ## 开发与测试
