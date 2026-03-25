@@ -275,6 +275,37 @@ print(enc.to_dict())
 print(api_rsa_generate_keypair(bits=1024).to_dict())
 ```
 
+## 第三方接口调用（课程要求对照）
+
+为满足“支持第三方程序可通过接口进行调用并返回结果及执行状态代码”的要求，项目已提供独立示例目录：
+
+- [examples/third_party_clients](examples/third_party_clients)
+- [examples/third_party_clients/README.md](examples/third_party_clients/README.md)
+
+该目录中的脚本从“第三方程序”视角调用 API，并展示以下能力：
+
+- 调用接口并获取统一结果结构：`code/message/data`
+- 基于状态码进行分支处理（成功、失败、拒绝请求等）
+- 覆盖全部算法类别（编码、哈希、HMAC/KDF、对称、公钥与签名）
+
+1. 编码能力：[examples/third_party_clients/encoding_client.py](examples/third_party_clients/encoding_client.py)
+2. 哈希能力：[examples/third_party_clients/hash_client.py](examples/third_party_clients/hash_client.py)
+3. HMAC/KDF 能力：[examples/third_party_clients/hmac_kdf_client.py](examples/third_party_clients/hmac_kdf_client.py)
+4. 对称算法能力：[examples/third_party_clients/symmetric_client.py](examples/third_party_clients/symmetric_client.py)
+5. 公钥与签名能力：[examples/third_party_clients/asymmetric_client.py](examples/third_party_clients/asymmetric_client.py)
+
+一键运行示例：
+
+```bash
+uv run python examples/third_party_clients/encoding_client.py
+uv run python examples/third_party_clients/hash_client.py
+uv run python examples/third_party_clients/hmac_kdf_client.py
+uv run python examples/third_party_clients/symmetric_client.py
+uv run python examples/third_party_clients/asymmetric_client.py
+```
+
+答辩展示建议：先展示成功路径，再展示错误路径（例如对称算法非法密钥），证明第三方程序可据状态码进行自动化决策。
+
 ## 返回结构与错误码
 
 ### 统一返回结构
