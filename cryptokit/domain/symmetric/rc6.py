@@ -1,4 +1,4 @@
-"""Pure Python RC6-32/20/16 implementation."""
+"""纯 Python RC6-32/20/16 实现。"""
 
 from __future__ import annotations
 
@@ -29,7 +29,7 @@ def _rotr(x: int, n: int) -> int:
 def _expand_key(key: bytes) -> list[int]:
     secret = bytes(key)
     if len(secret) == 0:
-        raise SymmetricError("RC6 key must not be empty")
+        raise SymmetricError("RC6 密钥不能为空")
 
     c = max(1, (len(secret) + 3) // 4)
     l = [0] * c
@@ -89,7 +89,7 @@ def _decrypt_block(block: bytes, s: list[int]) -> bytes:
 def rc6_encrypt(raw: bytes, key: bytes, mode: str = "ecb", iv: bytes | None = None) -> bytes:
     mode_lower = mode.lower()
     if mode_lower not in ("ecb", "cbc", "ctr"):
-        raise SymmetricError("unsupported RC6 mode")
+        raise SymmetricError("不支持的 RC6 模式")
 
     expanded = _expand_key(key)
     payload = bytes(raw)
@@ -99,7 +99,7 @@ def rc6_encrypt(raw: bytes, key: bytes, mode: str = "ecb", iv: bytes | None = No
         return b"".join(_encrypt_block(padded[i : i + BLOCK_BYTES], expanded) for i in range(0, len(padded), BLOCK_BYTES))
 
     if iv is None or len(iv) != BLOCK_BYTES:
-        raise SymmetricError("RC6-CBC/CTR requires 16-byte iv")
+        raise SymmetricError("RC6-CBC/CTR 需要 16 字节 IV")
 
     if mode_lower == "cbc":
         padded = _pkcs7_pad(payload, BLOCK_BYTES)
@@ -125,23 +125,23 @@ def rc6_encrypt(raw: bytes, key: bytes, mode: str = "ecb", iv: bytes | None = No
 def rc6_decrypt(raw: bytes, key: bytes, mode: str = "ecb", iv: bytes | None = None) -> bytes:
     mode_lower = mode.lower()
     if mode_lower not in ("ecb", "cbc", "ctr"):
-        raise SymmetricError("unsupported RC6 mode")
+        raise SymmetricError("不支持的 RC6 模式")
 
     expanded = _expand_key(key)
     payload = bytes(raw)
 
     if mode_lower == "ecb":
         if len(payload) % BLOCK_BYTES != 0:
-            raise SymmetricError("invalid RC6-ECB payload length")
+            raise SymmetricError("RC6-ECB 密文长度无效")
         plain = b"".join(_decrypt_block(payload[i : i + BLOCK_BYTES], expanded) for i in range(0, len(payload), BLOCK_BYTES))
         return _pkcs7_unpad(plain, BLOCK_BYTES)
 
     if iv is None or len(iv) != BLOCK_BYTES:
-        raise SymmetricError("RC6-CBC/CTR requires 16-byte iv")
+        raise SymmetricError("RC6-CBC/CTR 需要 16 字节 IV")
 
     if mode_lower == "cbc":
         if len(payload) % BLOCK_BYTES != 0:
-            raise SymmetricError("invalid RC6-CBC payload length")
+            raise SymmetricError("RC6-CBC 密文长度无效")
         out = bytearray()
         prev = bytes(iv)
         for i in range(0, len(payload), BLOCK_BYTES):

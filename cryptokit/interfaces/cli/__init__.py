@@ -1,4 +1,4 @@
-"""CLI adapters."""
+"""命令行接口适配层。"""
 
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ from cryptokit.interfaces.api import (
 
 
 def build_parser() -> argparse.ArgumentParser:
-	parser = argparse.ArgumentParser(prog="cryptokit", description="CryptoKit CLI")
+	parser = argparse.ArgumentParser(prog="cryptokit", description="CryptoKit 命令行工具")
 	subparsers = parser.add_subparsers(dest="command", required=True)
 
 	b64_encode_parser = subparsers.add_parser("base64-encode")

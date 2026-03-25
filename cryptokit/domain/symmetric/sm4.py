@@ -1,4 +1,4 @@
-"""SM4 symmetric encryption helpers with backend fallback."""
+"""SM4 对称加密工具（带后端回退）。"""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ BLOCK_SIZE = 16
 def _validate_key(key: bytes) -> bytes:
     normalized = bytes(key)
     if len(normalized) != BLOCK_SIZE:
-        raise SymmetricError("SM4 key size must be 16 bytes")
+        raise SymmetricError("SM4 密钥长度必须为 16 字节")
     return normalized
 
 
@@ -25,21 +25,21 @@ def _cryptography_sm4(
     try:
         from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
     except Exception as exc:
-        raise SymmetricError("cryptography backend unavailable") from exc
+        raise SymmetricError("cryptography 后端不可用") from exc
 
     mode_lower = mode.lower()
     if mode_lower == "ecb":
         block_mode = modes.ECB()
     elif mode_lower == "cbc":
         if iv is None or len(iv) != BLOCK_SIZE:
-            raise SymmetricError("SM4-CBC requires 16-byte iv")
+            raise SymmetricError("SM4-CBC 需要 16 字节 IV")
         block_mode = modes.CBC(bytes(iv))
     elif mode_lower == "ctr":
         if iv is None or len(iv) != BLOCK_SIZE:
-            raise SymmetricError("SM4-CTR requires 16-byte iv")
+            raise SymmetricError("SM4-CTR 需要 16 字节 IV")
         block_mode = modes.CTR(bytes(iv))
     else:
-        raise SymmetricError("unsupported SM4 mode")
+        raise SymmetricError("不支持的 SM4 模式")
 
     cipher = Cipher(algorithms.SM4(bytes(key)), block_mode)
     ctx = cipher.encryptor() if encrypt else cipher.decryptor()

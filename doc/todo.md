@@ -10,6 +10,7 @@
 - [x] 建立分层目录（interfaces/application/domain/infrastructure/shared）
 - [x] 建立测试分层目录（unit/integration/e2e）
 - [x] 创建共享基础文件（errors/result/types）
+- [x] 统一注释与提示性输出为中文
 - [ ] 统一命名规范与导入规范（模块名、函数名、常量名）
 - [ ] 定义跨层依赖约束检查规则（禁止反向依赖）
 

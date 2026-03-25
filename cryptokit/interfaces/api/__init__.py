@@ -1,4 +1,4 @@
-"""Python API adapters."""
+"""Python API 适配层。"""
 
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ def _encode_output(raw: bytes, output: str) -> str | bytes:
 		return raw.hex()
 	if mode == "base64":
 		return base64_encode(raw)
-	raise ValueError("output must be one of: raw, hex, base64")
+	raise ValueError("输出编码必须是 raw、hex 或 base64")
 
 
 def _decode_input(payload: str, encoding: str) -> bytes:
@@ -34,7 +34,7 @@ def _decode_input(payload: str, encoding: str) -> bytes:
 		return bytes.fromhex(payload)
 	if mode == "base64":
 		return base64_decode(payload)
-	raise ValueError("encoding must be one of: utf8, hex, base64")
+	raise ValueError("输入编码必须是 utf8、hex 或 base64")
 
 
 def api_utf8_encode(text: str, output: str = "hex") -> OperationResult:
@@ -55,7 +55,7 @@ def api_utf8_decode(hex_or_base64_payload: str, encoding: str = "hex") -> Operat
 		else:
 			return OperationResult.failure(
 				StatusCode.INVALID_INPUT,
-				"encoding must be one of: hex, base64",
+				"解码格式必须是 hex 或 base64",
 			)
 		return OperationResult.success(data={"value": utf8_decode(raw)})
 	except (EncodingError, ValueError) as exc:

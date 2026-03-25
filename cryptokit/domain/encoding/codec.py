@@ -1,4 +1,4 @@
-"""Encoding helpers for Base64 and UTF-8 conversions."""
+"""Base64 与 UTF-8 编解码工具。"""
 
 from __future__ import annotations
 
@@ -6,12 +6,12 @@ import base64
 
 
 class EncodingError(ValueError):
-    """Raised when an encoding operation fails."""
+    """编码/解码失败时抛出。"""
 
 
 def utf8_encode(text: str) -> bytes:
     if not isinstance(text, str):
-        raise EncodingError("text must be str")
+        raise EncodingError("文本输入必须是字符串")
     return text.encode("utf-8")
 
 
@@ -19,20 +19,20 @@ def utf8_decode(raw: bytes) -> str:
     try:
         return bytes(raw).decode("utf-8")
     except (TypeError, UnicodeDecodeError) as exc:
-        raise EncodingError("invalid UTF-8 bytes") from exc
+        raise EncodingError("UTF-8 字节序列无效") from exc
 
 
 def base64_encode(raw: bytes) -> str:
     try:
         return base64.b64encode(bytes(raw)).decode("ascii")
     except TypeError as exc:
-        raise EncodingError("input must be bytes-like") from exc
+        raise EncodingError("输入必须是 bytes 类型") from exc
 
 
 def base64_decode(payload: str) -> bytes:
     if not isinstance(payload, str):
-        raise EncodingError("payload must be str")
+        raise EncodingError("输入内容必须是字符串")
     try:
         return base64.b64decode(payload.encode("ascii"), validate=True)
     except (ValueError, UnicodeEncodeError) as exc:
-        raise EncodingError("invalid Base64 string") from exc
+        raise EncodingError("Base64 字符串无效") from exc
