@@ -299,3 +299,52 @@ uv run python main.py rsa-verify --payload hello --signature <sig> --public-key-
 - interfaces 层不直接编排 domain，统一经 application/use_cases 调用。
 - integration 与 e2e 测试通过。
 - API 与 CLI 关键路径输出一致。
+
+## 错误码覆盖验证（输入错误 / 密钥错误 / 模式错误）
+
+### 1) 自动化验证
+- 命令：
+
+```bash
+uv run pytest -q tests/integration/test_error_codes.py
+```
+
+- 预期结果：全部通过。
+
+### 2) 手动验证命令
+- 输入错误（hex 非法输入）：
+
+```bash
+uv run python main.py symmetric-encrypt \
+  --algorithm aes \
+  --mode cbc \
+  --payload zz \
+  --input-encoding hex \
+  --key-hex 00112233445566778899aabbccddeeff \
+  --iv-hex 000102030405060708090a0b0c0d0e0f \
+  --output hex
+```
+
+- 预期结果：返回 code=400。
+
+- 密钥错误（密钥长度非法）：
+
+```bash
+uv run python main.py symmetric-encrypt \
+  --algorithm aes \
+  --mode cbc \
+  --payload hello \
+  --key-hex 0011 \
+  --iv-hex 000102030405060708090a0b0c0d0e0f \
+  --output hex
+```
+
+- 预期结果：返回 code=401。
+
+- 模式错误（通过 API 验证不支持模式）：
+
+```bash
+uv run python -c "from cryptokit.interfaces.api import api_symmetric_encrypt; print(api_symmetric_encrypt('hello', algorithm='aes', mode='gcm', key_hex='00112233445566778899aabbccddeeff', iv_hex='000102030405060708090a0b0c0d0e0f', output='hex').to_dict())"
+```
+
+- 预期结果：返回 code=402。

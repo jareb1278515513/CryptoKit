@@ -143,8 +143,16 @@ def execute_pbkdf2(command: Pbkdf2Command) -> OperationResult:
 def execute_symmetric_encrypt(command: SymmetricCommand) -> OperationResult:
     try:
         raw = _decode_input(command.payload, command.input_encoding)
+    except (EncodingError, ValueError) as exc:
+        return OperationResult.failure(StatusCode.INVALID_INPUT, f"输入错误: {exc}")
+
+    try:
         key = bytes.fromhex(command.key_hex)
         iv = bytes.fromhex(command.iv_hex) if command.iv_hex else None
+    except ValueError as exc:
+        return OperationResult.failure(StatusCode.INVALID_KEY_SIZE, f"密钥或 IV 格式错误: {exc}")
+
+    try:
         cipher = symmetric_encrypt(raw, key=key, algorithm=command.algorithm, mode=command.mode, iv=iv)
         return OperationResult.success(
             data={
@@ -153,15 +161,30 @@ def execute_symmetric_encrypt(command: SymmetricCommand) -> OperationResult:
                 "value": _encode_output(cipher, command.output),
             }
         )
-    except (SymmetricError, EncodingError, ValueError) as exc:
-        return OperationResult.failure(StatusCode.CRYPTO_ERROR, str(exc))
+    except SymmetricError as exc:
+        message = str(exc)
+        if "密钥" in message or "key" in message.lower():
+            return OperationResult.failure(StatusCode.INVALID_KEY_SIZE, message)
+        if "模式" in message or "mode" in message.lower():
+            return OperationResult.failure(StatusCode.UNSUPPORTED_MODE, message)
+        return OperationResult.failure(StatusCode.CRYPTO_ERROR, message)
+    except ValueError as exc:
+        return OperationResult.failure(StatusCode.INVALID_INPUT, f"输入错误: {exc}")
 
 
 def execute_symmetric_decrypt(command: SymmetricCommand) -> OperationResult:
     try:
         raw = _decode_input(command.payload, command.input_encoding)
+    except (EncodingError, ValueError) as exc:
+        return OperationResult.failure(StatusCode.INVALID_INPUT, f"输入错误: {exc}")
+
+    try:
         key = bytes.fromhex(command.key_hex)
         iv = bytes.fromhex(command.iv_hex) if command.iv_hex else None
+    except ValueError as exc:
+        return OperationResult.failure(StatusCode.INVALID_KEY_SIZE, f"密钥或 IV 格式错误: {exc}")
+
+    try:
         plain = symmetric_decrypt(raw, key=key, algorithm=command.algorithm, mode=command.mode, iv=iv)
         value = utf8_decode(plain) if command.output.lower() == "utf8" else _encode_output(plain, command.output)
         return OperationResult.success(
@@ -171,8 +194,15 @@ def execute_symmetric_decrypt(command: SymmetricCommand) -> OperationResult:
                 "value": value,
             }
         )
-    except (SymmetricError, EncodingError, ValueError) as exc:
-        return OperationResult.failure(StatusCode.CRYPTO_ERROR, str(exc))
+    except SymmetricError as exc:
+        message = str(exc)
+        if "密钥" in message or "key" in message.lower():
+            return OperationResult.failure(StatusCode.INVALID_KEY_SIZE, message)
+        if "模式" in message or "mode" in message.lower():
+            return OperationResult.failure(StatusCode.UNSUPPORTED_MODE, message)
+        return OperationResult.failure(StatusCode.CRYPTO_ERROR, message)
+    except ValueError as exc:
+        return OperationResult.failure(StatusCode.INVALID_INPUT, f"输入错误: {exc}")
 
 
 def execute_rsa_keygen(command: RsaKeygenCommand) -> OperationResult:
