@@ -35,24 +35,26 @@ from cryptokit.application.use_cases import (
 from cryptokit.shared.result import OperationResult
 
 
-def api_utf8_encode(text: str, output: str = "hex") -> OperationResult:
-    return execute_utf8_encode(TextTransformCommand(payload=text, output=output))
+def api_utf8_encode(text: str, output: str = "hex", trace: bool = False) -> OperationResult:
+    return execute_utf8_encode(TextTransformCommand(payload=text, output=output, trace=trace))
 
 
-def api_utf8_decode(hex_or_base64_payload: str, encoding: str = "hex") -> OperationResult:
-    return execute_utf8_decode(TextTransformCommand(payload=hex_or_base64_payload, input_encoding=encoding))
+def api_utf8_decode(hex_or_base64_payload: str, encoding: str = "hex", trace: bool = False) -> OperationResult:
+    return execute_utf8_decode(
+        TextTransformCommand(payload=hex_or_base64_payload, input_encoding=encoding, trace=trace)
+    )
 
 
-def api_base64_encode(text: str) -> OperationResult:
-    return execute_base64_encode(TextTransformCommand(payload=text))
+def api_base64_encode(text: str, trace: bool = False) -> OperationResult:
+    return execute_base64_encode(TextTransformCommand(payload=text, trace=trace))
 
 
-def api_base64_decode(payload: str) -> OperationResult:
-    return execute_base64_decode(TextTransformCommand(payload=payload))
+def api_base64_decode(payload: str, trace: bool = False) -> OperationResult:
+    return execute_base64_decode(TextTransformCommand(payload=payload, trace=trace))
 
 
-def api_hash_text(text: str, algorithm: str = "sha256", output: str = "hex") -> OperationResult:
-    return execute_hash(HashCommand(payload=text, algorithm=algorithm, output=output))
+def api_hash_text(text: str, algorithm: str = "sha256", output: str = "hex", trace: bool = False) -> OperationResult:
+    return execute_hash(HashCommand(payload=text, algorithm=algorithm, output=output, trace=trace))
 
 
 def api_hmac_text(
@@ -60,8 +62,9 @@ def api_hmac_text(
     key: str,
     algorithm: str = "sha256",
     output: str = "hex",
+    trace: bool = False,
 ) -> OperationResult:
-    return execute_hmac(HmacCommand(payload=text, key=key, algorithm=algorithm, output=output))
+    return execute_hmac(HmacCommand(payload=text, key=key, algorithm=algorithm, output=output, trace=trace))
 
 
 def api_pbkdf2(
@@ -71,6 +74,7 @@ def api_pbkdf2(
     dklen: int = 32,
     algorithm: str = "sha256",
     output: str = "hex",
+    trace: bool = False,
 ) -> OperationResult:
     return execute_pbkdf2(
         Pbkdf2Command(
@@ -80,6 +84,7 @@ def api_pbkdf2(
             dklen=dklen,
             algorithm=algorithm,
             output=output,
+            trace=trace,
         )
     )
 
@@ -93,6 +98,7 @@ def api_symmetric_encrypt(
     iv_hex: str | None = None,
     input_encoding: str = "utf8",
     output: str = "hex",
+    trace: bool = False,
 ) -> OperationResult:
     return execute_symmetric_encrypt(
         SymmetricCommand(
@@ -103,6 +109,7 @@ def api_symmetric_encrypt(
             iv_hex=iv_hex,
             input_encoding=input_encoding,
             output=output,
+            trace=trace,
         )
     )
 
@@ -116,6 +123,7 @@ def api_symmetric_decrypt(
     iv_hex: str | None = None,
     input_encoding: str = "hex",
     output: str = "utf8",
+    trace: bool = False,
 ) -> OperationResult:
     return execute_symmetric_decrypt(
         SymmetricCommand(
@@ -126,12 +134,13 @@ def api_symmetric_decrypt(
             iv_hex=iv_hex,
             input_encoding=input_encoding,
             output=output,
+            trace=trace,
         )
     )
 
 
-def api_rsa_generate_keypair(bits: int = 1024) -> OperationResult:
-    return execute_rsa_keygen(RsaKeygenCommand(bits=bits))
+def api_rsa_generate_keypair(bits: int = 1024, trace: bool = False) -> OperationResult:
+    return execute_rsa_keygen(RsaKeygenCommand(bits=bits, trace=trace))
 
 
 def api_rsa_encrypt(
@@ -140,6 +149,7 @@ def api_rsa_encrypt(
     public_key_pem: str,
     input_encoding: str = "utf8",
     output: str = "base64",
+    trace: bool = False,
 ) -> OperationResult:
     return execute_rsa_encrypt(
         AsymmetricCryptoCommand(
@@ -147,6 +157,7 @@ def api_rsa_encrypt(
             key_pem=public_key_pem,
             input_encoding=input_encoding,
             output=output,
+            trace=trace,
         )
     )
 
@@ -157,6 +168,7 @@ def api_rsa_decrypt(
     private_key_pem: str,
     input_encoding: str = "base64",
     output: str = "utf8",
+    trace: bool = False,
 ) -> OperationResult:
     return execute_rsa_decrypt(
         AsymmetricCryptoCommand(
@@ -164,6 +176,7 @@ def api_rsa_decrypt(
             key_pem=private_key_pem,
             input_encoding=input_encoding,
             output=output,
+            trace=trace,
         )
     )
 
@@ -174,6 +187,7 @@ def api_rsa_sign_sha1(
     private_key_pem: str,
     input_encoding: str = "utf8",
     output: str = "base64",
+    trace: bool = False,
 ) -> OperationResult:
     return execute_rsa_sign(
         AsymmetricCryptoCommand(
@@ -181,6 +195,7 @@ def api_rsa_sign_sha1(
             key_pem=private_key_pem,
             input_encoding=input_encoding,
             output=output,
+            trace=trace,
         )
     )
 
@@ -192,6 +207,7 @@ def api_rsa_verify_sha1(
     public_key_pem: str,
     input_encoding: str = "utf8",
     signature_encoding: str = "base64",
+    trace: bool = False,
 ) -> OperationResult:
     return execute_rsa_verify(
         VerifyCommand(
@@ -200,12 +216,13 @@ def api_rsa_verify_sha1(
             public_key_pem=public_key_pem,
             input_encoding=input_encoding,
             signature_encoding=signature_encoding,
+            trace=trace,
         )
     )
 
 
-def api_ecc_generate_keypair() -> OperationResult:
-    return execute_ecc_keygen(EccKeygenCommand(curve="nist-p160"))
+def api_ecc_generate_keypair(trace: bool = False) -> OperationResult:
+    return execute_ecc_keygen(EccKeygenCommand(curve="nist-p160", trace=trace))
 
 
 def api_ecdsa_sign_sha1(
@@ -214,6 +231,7 @@ def api_ecdsa_sign_sha1(
     private_key_pem: str,
     input_encoding: str = "utf8",
     output: str = "base64",
+    trace: bool = False,
 ) -> OperationResult:
     return execute_ecdsa_sign(
         AsymmetricCryptoCommand(
@@ -221,6 +239,7 @@ def api_ecdsa_sign_sha1(
             key_pem=private_key_pem,
             input_encoding=input_encoding,
             output=output,
+            trace=trace,
         )
     )
 
@@ -232,6 +251,7 @@ def api_ecdsa_verify_sha1(
     public_key_pem: str,
     input_encoding: str = "utf8",
     signature_encoding: str = "base64",
+    trace: bool = False,
 ) -> OperationResult:
     return execute_ecdsa_verify(
         VerifyCommand(
@@ -240,6 +260,7 @@ def api_ecdsa_verify_sha1(
             public_key_pem=public_key_pem,
             input_encoding=input_encoding,
             signature_encoding=signature_encoding,
+            trace=trace,
         )
     )
 

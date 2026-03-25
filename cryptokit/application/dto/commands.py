@@ -10,6 +10,7 @@ class TextTransformCommand:
     payload: str
     input_encoding: str = "utf8"
     output: str = "hex"
+    trace: bool = False
 
 
 @dataclass(slots=True)
@@ -17,6 +18,7 @@ class HashCommand:
     payload: str
     algorithm: str = "sha256"
     output: str = "hex"
+    trace: bool = False
 
 
 @dataclass(slots=True)
@@ -25,6 +27,7 @@ class HmacCommand:
     key: str
     algorithm: str = "sha256"
     output: str = "hex"
+    trace: bool = False
 
 
 @dataclass(slots=True)
@@ -35,6 +38,7 @@ class Pbkdf2Command:
     dklen: int = 32
     algorithm: str = "sha256"
     output: str = "hex"
+    trace: bool = False
 
 
 @dataclass(slots=True)
@@ -46,16 +50,19 @@ class SymmetricCommand:
     iv_hex: str | None = None
     input_encoding: str = "utf8"
     output: str = "hex"
+    trace: bool = False
 
 
 @dataclass(slots=True)
 class RsaKeygenCommand:
     bits: int = 1024
+    trace: bool = False
 
 
 @dataclass(slots=True)
 class EccKeygenCommand:
     curve: str = "nist-p160"
+    trace: bool = False
 
 
 @dataclass(slots=True)
@@ -64,6 +71,7 @@ class AsymmetricCryptoCommand:
     key_pem: str
     input_encoding: str = "utf8"
     output: str = "base64"
+    trace: bool = False
 
 
 @dataclass(slots=True)
@@ -73,3 +81,4 @@ class VerifyCommand:
     public_key_pem: str
     input_encoding: str = "utf8"
     signature_encoding: str = "base64"
+    trace: bool = False

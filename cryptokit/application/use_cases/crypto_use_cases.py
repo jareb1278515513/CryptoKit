@@ -37,6 +37,14 @@ from cryptokit.shared.errors import StatusCode
 from cryptokit.shared.result import OperationResult
 
 
+def _with_trace(data: dict, enabled: bool, steps: list[str]) -> dict:
+    if not enabled:
+        return data
+    payload = dict(data)
+    payload["trace"] = steps
+    return payload
+
+
 def _encode_output(raw: bytes, output: str) -> str | bytes:
     mode = output.lower()
     if mode == "raw":
@@ -62,7 +70,17 @@ def _decode_input(payload: str, encoding: str) -> bytes:
 def execute_utf8_encode(command: TextTransformCommand) -> OperationResult:
     try:
         raw = utf8_encode(command.payload)
-        return OperationResult.success(data={"value": _encode_output(raw, command.output)})
+        return OperationResult.success(
+            data=_with_trace(
+                {"value": _encode_output(raw, command.output)},
+                command.trace,
+                [
+                    "步骤1: 读取输入文本",
+                    f"步骤2: 按 UTF-8 编码为字节流，长度={len(raw)}",
+                    f"步骤3: 结果按 {command.output.lower()} 输出",
+                ],
+            )
+        )
     except (EncodingError, ValueError) as exc:
         return OperationResult.failure(StatusCode.ENCODING_ERROR, str(exc))
 
@@ -99,11 +117,20 @@ def execute_hash(command: HashCommand) -> OperationResult:
     try:
         raw = digest(utf8_encode(command.payload), command.algorithm)
         return OperationResult.success(
-            data={
-                "algorithm": command.algorithm.lower(),
-                "supported_algorithms": sorted(SUPPORTED_DIGESTS),
-                "value": _encode_output(raw, command.output),
-            }
+            data=_with_trace(
+                {
+                    "algorithm": command.algorithm.lower(),
+                    "supported_algorithms": sorted(SUPPORTED_DIGESTS),
+                    "value": _encode_output(raw, command.output),
+                },
+                command.trace,
+                [
+                    "步骤1: 按 UTF-8 读取输入明文",
+                    f"步骤2: 选择摘要算法 {command.algorithm.lower()}",
+                    "步骤3: 计算消息摘要",
+                    f"步骤4: 摘要按 {command.output.lower()} 输出",
+                ],
+            )
         )
     except (HashError, EncodingError, ValueError) as exc:
         return OperationResult.failure(StatusCode.CRYPTO_ERROR, str(exc))
@@ -113,7 +140,16 @@ def execute_hmac(command: HmacCommand) -> OperationResult:
     try:
         raw = hmac_digest(utf8_encode(command.payload), utf8_encode(command.key), command.algorithm)
         return OperationResult.success(
-            data={"algorithm": command.algorithm.lower(), "value": _encode_output(raw, command.output)}
+            data=_with_trace(
+                {"algorithm": command.algorithm.lower(), "value": _encode_output(raw, command.output)},
+                command.trace,
+                [
+                    "步骤1: 按 UTF-8 读取消息与密钥",
+                    f"步骤2: 选择 HMAC 算法 {command.algorithm.lower()}",
+                    "步骤3: 执行 HMAC 计算",
+                    f"步骤4: 结果按 {command.output.lower()} 输出",
+                ],
+            )
         )
     except (HashError, EncodingError, ValueError) as exc:
         return OperationResult.failure(StatusCode.CRYPTO_ERROR, str(exc))
@@ -129,12 +165,21 @@ def execute_pbkdf2(command: Pbkdf2Command) -> OperationResult:
             algorithm=command.algorithm,
         )
         return OperationResult.success(
-            data={
-                "algorithm": command.algorithm.lower(),
-                "iterations": command.iterations,
-                "dklen": command.dklen,
-                "value": _encode_output(raw, command.output),
-            }
+            data=_with_trace(
+                {
+                    "algorithm": command.algorithm.lower(),
+                    "iterations": command.iterations,
+                    "dklen": command.dklen,
+                    "value": _encode_output(raw, command.output),
+                },
+                command.trace,
+                [
+                    "步骤1: 按 UTF-8 读取口令与盐值",
+                    f"步骤2: 选择 PRF 哈希 {command.algorithm.lower()}",
+                    f"步骤3: 执行 PBKDF2，迭代次数={command.iterations}，输出长度={command.dklen}",
+                    f"步骤4: 派生结果按 {command.output.lower()} 输出",
+                ],
+            )
         )
     except (HashError, EncodingError, ValueError) as exc:
         return OperationResult.failure(StatusCode.CRYPTO_ERROR, str(exc))
@@ -155,11 +200,21 @@ def execute_symmetric_encrypt(command: SymmetricCommand) -> OperationResult:
     try:
         cipher = symmetric_encrypt(raw, key=key, algorithm=command.algorithm, mode=command.mode, iv=iv)
         return OperationResult.success(
-            data={
-                "algorithm": command.algorithm.lower(),
-                "mode": command.mode.lower(),
-                "value": _encode_output(cipher, command.output),
-            }
+            data=_with_trace(
+                {
+                    "algorithm": command.algorithm.lower(),
+                    "mode": command.mode.lower(),
+                    "value": _encode_output(cipher, command.output),
+                },
+                command.trace,
+                [
+                    f"步骤1: 读取输入并按 {command.input_encoding.lower()} 解码，明文长度={len(raw)}",
+                    f"步骤2: 选择算法 {command.algorithm.lower()}，模式 {command.mode.lower()}",
+                    f"步骤3: 校验密钥长度={len(key)} 字节",
+                    "步骤4: 执行分组加密并完成必要填充",
+                    f"步骤5: 密文按 {command.output.lower()} 输出",
+                ],
+            )
         )
     except SymmetricError as exc:
         message = str(exc)
@@ -188,11 +243,21 @@ def execute_symmetric_decrypt(command: SymmetricCommand) -> OperationResult:
         plain = symmetric_decrypt(raw, key=key, algorithm=command.algorithm, mode=command.mode, iv=iv)
         value = utf8_decode(plain) if command.output.lower() == "utf8" else _encode_output(plain, command.output)
         return OperationResult.success(
-            data={
-                "algorithm": command.algorithm.lower(),
-                "mode": command.mode.lower(),
-                "value": value,
-            }
+            data=_with_trace(
+                {
+                    "algorithm": command.algorithm.lower(),
+                    "mode": command.mode.lower(),
+                    "value": value,
+                },
+                command.trace,
+                [
+                    f"步骤1: 读取输入并按 {command.input_encoding.lower()} 解码，密文长度={len(raw)}",
+                    f"步骤2: 选择算法 {command.algorithm.lower()}，模式 {command.mode.lower()}",
+                    f"步骤3: 校验密钥长度={len(key)} 字节",
+                    "步骤4: 执行分组解密并完成必要去填充",
+                    f"步骤5: 明文按 {command.output.lower()} 输出",
+                ],
+            )
         )
     except SymmetricError as exc:
         message = str(exc)
@@ -209,12 +274,21 @@ def execute_rsa_keygen(command: RsaKeygenCommand) -> OperationResult:
     try:
         private_key_pem, public_key_pem = rsa_generate_keypair(bits=command.bits)
         return OperationResult.success(
-            data={
-                "algorithm": "rsa",
-                "bits": command.bits,
-                "private_key_pem": private_key_pem,
-                "public_key_pem": public_key_pem,
-            }
+            data=_with_trace(
+                {
+                    "algorithm": "rsa",
+                    "bits": command.bits,
+                    "private_key_pem": private_key_pem,
+                    "public_key_pem": public_key_pem,
+                },
+                command.trace,
+                [
+                    f"步骤1: 选择 RSA 密钥长度 {command.bits}",
+                    "步骤2: 生成 RSA 私钥",
+                    "步骤3: 从私钥导出公钥",
+                    "步骤4: 输出 PEM 格式密钥对",
+                ],
+            )
         )
     except (AsymmetricError, ValueError) as exc:
         return OperationResult.failure(StatusCode.CRYPTO_ERROR, str(exc))
@@ -224,7 +298,18 @@ def execute_rsa_encrypt(command: AsymmetricCryptoCommand) -> OperationResult:
     try:
         raw = _decode_input(command.payload, command.input_encoding)
         cipher = rsa_encrypt(raw, public_key_pem=command.key_pem)
-        return OperationResult.success(data={"algorithm": "rsa", "value": _encode_output(cipher, command.output)})
+        return OperationResult.success(
+            data=_with_trace(
+                {"algorithm": "rsa", "value": _encode_output(cipher, command.output)},
+                command.trace,
+                [
+                    f"步骤1: 读取明文并按 {command.input_encoding.lower()} 解码",
+                    "步骤2: 加载 RSA 公钥",
+                    "步骤3: 执行 RSA 加密",
+                    f"步骤4: 密文按 {command.output.lower()} 输出",
+                ],
+            )
+        )
     except (AsymmetricError, EncodingError, ValueError) as exc:
         return OperationResult.failure(StatusCode.CRYPTO_ERROR, str(exc))
 
@@ -234,7 +319,18 @@ def execute_rsa_decrypt(command: AsymmetricCryptoCommand) -> OperationResult:
         raw = _decode_input(command.payload, command.input_encoding)
         plain = rsa_decrypt(raw, private_key_pem=command.key_pem)
         value = utf8_decode(plain) if command.output.lower() == "utf8" else _encode_output(plain, command.output)
-        return OperationResult.success(data={"algorithm": "rsa", "value": value})
+        return OperationResult.success(
+            data=_with_trace(
+                {"algorithm": "rsa", "value": value},
+                command.trace,
+                [
+                    f"步骤1: 读取密文并按 {command.input_encoding.lower()} 解码",
+                    "步骤2: 加载 RSA 私钥",
+                    "步骤3: 执行 RSA 解密",
+                    f"步骤4: 明文按 {command.output.lower()} 输出",
+                ],
+            )
+        )
     except (AsymmetricError, EncodingError, ValueError) as exc:
         return OperationResult.failure(StatusCode.CRYPTO_ERROR, str(exc))
 
@@ -243,7 +339,18 @@ def execute_rsa_sign(command: AsymmetricCryptoCommand) -> OperationResult:
     try:
         raw = _decode_input(command.payload, command.input_encoding)
         sig = rsa_sign_sha1(raw, private_key_pem=command.key_pem)
-        return OperationResult.success(data={"algorithm": "rsa-sha1", "value": _encode_output(sig, command.output)})
+        return OperationResult.success(
+            data=_with_trace(
+                {"algorithm": "rsa-sha1", "value": _encode_output(sig, command.output)},
+                command.trace,
+                [
+                    f"步骤1: 读取消息并按 {command.input_encoding.lower()} 解码",
+                    "步骤2: 先计算 SHA-1 摘要",
+                    "步骤3: 使用 RSA 私钥执行签名",
+                    f"步骤4: 签名按 {command.output.lower()} 输出",
+                ],
+            )
+        )
     except (AsymmetricError, EncodingError, ValueError) as exc:
         return OperationResult.failure(StatusCode.CRYPTO_ERROR, str(exc))
 
@@ -253,7 +360,18 @@ def execute_rsa_verify(command: VerifyCommand) -> OperationResult:
         raw = _decode_input(command.payload, command.input_encoding)
         sig = _decode_input(command.signature, command.signature_encoding)
         ok = rsa_verify_sha1(raw, sig, public_key_pem=command.public_key_pem)
-        return OperationResult.success(data={"algorithm": "rsa-sha1", "verified": ok})
+        return OperationResult.success(
+            data=_with_trace(
+                {"algorithm": "rsa-sha1", "verified": ok},
+                command.trace,
+                [
+                    f"步骤1: 读取消息并按 {command.input_encoding.lower()} 解码",
+                    f"步骤2: 读取签名并按 {command.signature_encoding.lower()} 解码",
+                    "步骤3: 先计算 SHA-1 摘要",
+                    "步骤4: 使用 RSA 公钥校验签名",
+                ],
+            )
+        )
     except (AsymmetricError, EncodingError, ValueError) as exc:
         return OperationResult.failure(StatusCode.CRYPTO_ERROR, str(exc))
 
@@ -264,12 +382,21 @@ def execute_ecc_keygen(command: EccKeygenCommand) -> OperationResult:
     try:
         private_key_pem, public_key_pem = ecc_generate_keypair_p160()
         return OperationResult.success(
-            data={
-                "algorithm": "ecc-160",
-                "curve": "nist-p160",
-                "private_key_pem": private_key_pem,
-                "public_key_pem": public_key_pem,
-            }
+            data=_with_trace(
+                {
+                    "algorithm": "ecc-160",
+                    "curve": "nist-p160",
+                    "private_key_pem": private_key_pem,
+                    "public_key_pem": public_key_pem,
+                },
+                command.trace,
+                [
+                    "步骤1: 选择椭圆曲线 nist-p160",
+                    "步骤2: 生成 ECC 私钥",
+                    "步骤3: 从私钥导出公钥",
+                    "步骤4: 输出 PEM 格式密钥对",
+                ],
+            )
         )
     except AsymmetricError as exc:
         return OperationResult.failure(StatusCode.CRYPTO_ERROR, str(exc))
@@ -279,7 +406,18 @@ def execute_ecdsa_sign(command: AsymmetricCryptoCommand) -> OperationResult:
     try:
         raw = _decode_input(command.payload, command.input_encoding)
         sig = ecdsa_sign_sha1(raw, private_key_pem=command.key_pem)
-        return OperationResult.success(data={"algorithm": "ecdsa-sha1", "value": _encode_output(sig, command.output)})
+        return OperationResult.success(
+            data=_with_trace(
+                {"algorithm": "ecdsa-sha1", "value": _encode_output(sig, command.output)},
+                command.trace,
+                [
+                    f"步骤1: 读取消息并按 {command.input_encoding.lower()} 解码",
+                    "步骤2: 先计算 SHA-1 摘要",
+                    "步骤3: 使用 ECC 私钥执行 ECDSA 签名",
+                    f"步骤4: 签名按 {command.output.lower()} 输出",
+                ],
+            )
+        )
     except (AsymmetricError, EncodingError, ValueError) as exc:
         return OperationResult.failure(StatusCode.CRYPTO_ERROR, str(exc))
 
@@ -289,6 +427,17 @@ def execute_ecdsa_verify(command: VerifyCommand) -> OperationResult:
         raw = _decode_input(command.payload, command.input_encoding)
         sig = _decode_input(command.signature, command.signature_encoding)
         ok = ecdsa_verify_sha1(raw, sig, public_key_pem=command.public_key_pem)
-        return OperationResult.success(data={"algorithm": "ecdsa-sha1", "verified": ok})
+        return OperationResult.success(
+            data=_with_trace(
+                {"algorithm": "ecdsa-sha1", "verified": ok},
+                command.trace,
+                [
+                    f"步骤1: 读取消息并按 {command.input_encoding.lower()} 解码",
+                    f"步骤2: 读取签名并按 {command.signature_encoding.lower()} 解码",
+                    "步骤3: 先计算 SHA-1 摘要",
+                    "步骤4: 使用 ECC 公钥校验签名",
+                ],
+            )
+        )
     except (AsymmetricError, EncodingError, ValueError) as exc:
         return OperationResult.failure(StatusCode.CRYPTO_ERROR, str(exc))

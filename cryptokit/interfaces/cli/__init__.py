@@ -37,6 +37,7 @@ def _load_text_arg(inline_value: str | None, file_path: str | None, arg_name: st
 
 def build_parser() -> argparse.ArgumentParser:
 	parser = argparse.ArgumentParser(prog="cryptokit", description="CryptoKit 命令行工具")
+	parser.add_argument("--trace", action="store_true", help="显示算法执行中间过程")
 	subparsers = parser.add_subparsers(dest="command", required=True)
 
 	b64_encode_parser = subparsers.add_parser("base64-encode")
@@ -148,21 +149,22 @@ def run_cli(argv: list[str] | None = None) -> int:
 	args = parser.parse_args(argv)
 
 	if args.command == "base64-encode":
-		result = api_base64_encode(args.text)
+		result = api_base64_encode(args.text, trace=args.trace)
 	elif args.command == "base64-decode":
-		result = api_base64_decode(args.payload)
+		result = api_base64_decode(args.payload, trace=args.trace)
 	elif args.command == "utf8-encode":
-		result = api_utf8_encode(args.text, output=args.output)
+		result = api_utf8_encode(args.text, output=args.output, trace=args.trace)
 	elif args.command == "utf8-decode":
-		result = api_utf8_decode(args.payload, encoding=args.encoding)
+		result = api_utf8_decode(args.payload, encoding=args.encoding, trace=args.trace)
 	elif args.command == "hash":
-		result = api_hash_text(args.text, algorithm=args.algorithm, output=args.output)
+		result = api_hash_text(args.text, algorithm=args.algorithm, output=args.output, trace=args.trace)
 	elif args.command == "hmac":
 		result = api_hmac_text(
 			args.text,
 			key=args.key,
 			algorithm=args.algorithm,
 			output=args.output,
+			trace=args.trace,
 		)
 	elif args.command == "symmetric-encrypt":
 		result = api_symmetric_encrypt(
@@ -173,6 +175,7 @@ def run_cli(argv: list[str] | None = None) -> int:
 			iv_hex=args.iv_hex,
 			input_encoding=args.input_encoding,
 			output=args.output,
+			trace=args.trace,
 		)
 	elif args.command == "symmetric-decrypt":
 		result = api_symmetric_decrypt(
@@ -183,9 +186,10 @@ def run_cli(argv: list[str] | None = None) -> int:
 			iv_hex=args.iv_hex,
 			input_encoding=args.input_encoding,
 			output=args.output,
+			trace=args.trace,
 		)
 	elif args.command == "rsa-generate":
-		result = api_rsa_generate_keypair(bits=args.bits)
+		result = api_rsa_generate_keypair(bits=args.bits, trace=args.trace)
 	elif args.command == "rsa-encrypt":
 		try:
 			public_key_pem = _load_text_arg(args.public_key_pem, args.public_key_file, "public_key")
@@ -194,6 +198,7 @@ def run_cli(argv: list[str] | None = None) -> int:
 				public_key_pem=public_key_pem,
 				input_encoding=args.input_encoding,
 				output=args.output,
+				trace=args.trace,
 			)
 		except ValueError as exc:
 			from cryptokit.shared.errors import StatusCode
@@ -208,6 +213,7 @@ def run_cli(argv: list[str] | None = None) -> int:
 				private_key_pem=private_key_pem,
 				input_encoding=args.input_encoding,
 				output=args.output,
+				trace=args.trace,
 			)
 		except ValueError as exc:
 			from cryptokit.shared.errors import StatusCode
@@ -222,6 +228,7 @@ def run_cli(argv: list[str] | None = None) -> int:
 				private_key_pem=private_key_pem,
 				input_encoding=args.input_encoding,
 				output=args.output,
+				trace=args.trace,
 			)
 		except ValueError as exc:
 			from cryptokit.shared.errors import StatusCode
@@ -237,6 +244,7 @@ def run_cli(argv: list[str] | None = None) -> int:
 				public_key_pem=public_key_pem,
 				input_encoding=args.input_encoding,
 				signature_encoding=args.signature_encoding,
+				trace=args.trace,
 			)
 		except ValueError as exc:
 			from cryptokit.shared.errors import StatusCode
@@ -244,7 +252,7 @@ def run_cli(argv: list[str] | None = None) -> int:
 
 			result = OperationResult.failure(StatusCode.INVALID_INPUT, str(exc))
 	elif args.command == "ecc-generate":
-		result = api_ecc_generate_keypair()
+		result = api_ecc_generate_keypair(trace=args.trace)
 	elif args.command == "ecdsa-sign":
 		try:
 			private_key_pem = _load_text_arg(args.private_key_pem, args.private_key_file, "private_key")
@@ -253,6 +261,7 @@ def run_cli(argv: list[str] | None = None) -> int:
 				private_key_pem=private_key_pem,
 				input_encoding=args.input_encoding,
 				output=args.output,
+				trace=args.trace,
 			)
 		except ValueError as exc:
 			from cryptokit.shared.errors import StatusCode
@@ -268,6 +277,7 @@ def run_cli(argv: list[str] | None = None) -> int:
 				public_key_pem=public_key_pem,
 				input_encoding=args.input_encoding,
 				signature_encoding=args.signature_encoding,
+				trace=args.trace,
 			)
 		except ValueError as exc:
 			from cryptokit.shared.errors import StatusCode
@@ -282,6 +292,7 @@ def run_cli(argv: list[str] | None = None) -> int:
 			dklen=args.dklen,
 			algorithm=args.algorithm,
 			output=args.output,
+			trace=args.trace,
 		)
 
 	print(json.dumps(result.to_dict(), ensure_ascii=False))

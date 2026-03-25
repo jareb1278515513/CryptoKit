@@ -348,3 +348,42 @@ uv run python -c "from cryptokit.interfaces.api import api_symmetric_encrypt; pr
 ```
 
 - 预期结果：返回 code=402。
+
+## 可见中间过程模式（Trace）验证
+
+### 1) 自动化验证
+- 命令：
+
+```bash
+uv run pytest -q tests/e2e/test_trace_mode.py
+```
+
+- 预期结果：通过。
+
+### 2) CLI 手动验证
+- 哈希过程可视化：
+
+```bash
+uv run python main.py --trace hash --text hello --algorithm sha256
+```
+
+- 预期结果：
+  - code 为 200
+  - data.trace 存在且为步骤列表
+  - trace 内容包含算法名 sha256
+
+- 对称加密过程可视化：
+
+```bash
+uv run python main.py --trace symmetric-encrypt \
+  --algorithm aes \
+  --mode cbc \
+  --payload hello \
+  --key-hex 00112233445566778899aabbccddeeff \
+  --iv-hex 000102030405060708090a0b0c0d0e0f \
+  --output hex
+```
+
+- 预期结果：
+  - code 为 200
+  - data.trace 存在，包含输入解码、算法模式、密钥长度校验、加密执行、输出编码等步骤
