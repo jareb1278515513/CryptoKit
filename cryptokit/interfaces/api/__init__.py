@@ -9,6 +9,17 @@ from cryptokit.domain.encoding import (
 	utf8_decode,
 	utf8_encode,
 )
+from cryptokit.domain.asymmetric import (
+	AsymmetricError,
+	ecc_generate_keypair_p160,
+	ecdsa_sign_sha1,
+	ecdsa_verify_sha1,
+	rsa_decrypt,
+	rsa_encrypt,
+	rsa_generate_keypair,
+	rsa_sign_sha1,
+	rsa_verify_sha1,
+)
 from cryptokit.domain.hash import HashError, SUPPORTED_DIGESTS, digest, hmac_digest, pbkdf2
 from cryptokit.domain.symmetric import SymmetricError, symmetric_decrypt, symmetric_encrypt
 from cryptokit.shared.errors import StatusCode
@@ -192,6 +203,131 @@ def api_symmetric_decrypt(
 		return OperationResult.failure(StatusCode.CRYPTO_ERROR, str(exc))
 
 
+def api_rsa_generate_keypair(bits: int = 1024) -> OperationResult:
+	try:
+		private_key_pem, public_key_pem = rsa_generate_keypair(bits=bits)
+		return OperationResult.success(
+			data={
+				"algorithm": "rsa",
+				"bits": bits,
+				"private_key_pem": private_key_pem,
+				"public_key_pem": public_key_pem,
+			}
+		)
+	except (AsymmetricError, ValueError) as exc:
+		return OperationResult.failure(StatusCode.CRYPTO_ERROR, str(exc))
+
+
+def api_rsa_encrypt(
+	payload: str,
+	*,
+	public_key_pem: str,
+	input_encoding: str = "utf8",
+	output: str = "base64",
+) -> OperationResult:
+	try:
+		raw = _decode_input(payload, input_encoding)
+		cipher = rsa_encrypt(raw, public_key_pem=public_key_pem)
+		return OperationResult.success(data={"algorithm": "rsa", "value": _encode_output(cipher, output)})
+	except (AsymmetricError, EncodingError, ValueError) as exc:
+		return OperationResult.failure(StatusCode.CRYPTO_ERROR, str(exc))
+
+
+def api_rsa_decrypt(
+	payload: str,
+	*,
+	private_key_pem: str,
+	input_encoding: str = "base64",
+	output: str = "utf8",
+) -> OperationResult:
+	try:
+		raw = _decode_input(payload, input_encoding)
+		plain = rsa_decrypt(raw, private_key_pem=private_key_pem)
+		value = utf8_decode(plain) if output.lower() == "utf8" else _encode_output(plain, output)
+		return OperationResult.success(data={"algorithm": "rsa", "value": value})
+	except (AsymmetricError, EncodingError, ValueError) as exc:
+		return OperationResult.failure(StatusCode.CRYPTO_ERROR, str(exc))
+
+
+def api_rsa_sign_sha1(
+	payload: str,
+	*,
+	private_key_pem: str,
+	input_encoding: str = "utf8",
+	output: str = "base64",
+) -> OperationResult:
+	try:
+		raw = _decode_input(payload, input_encoding)
+		sig = rsa_sign_sha1(raw, private_key_pem=private_key_pem)
+		return OperationResult.success(data={"algorithm": "rsa-sha1", "value": _encode_output(sig, output)})
+	except (AsymmetricError, EncodingError, ValueError) as exc:
+		return OperationResult.failure(StatusCode.CRYPTO_ERROR, str(exc))
+
+
+def api_rsa_verify_sha1(
+	payload: str,
+	*,
+	signature: str,
+	public_key_pem: str,
+	input_encoding: str = "utf8",
+	signature_encoding: str = "base64",
+) -> OperationResult:
+	try:
+		raw = _decode_input(payload, input_encoding)
+		sig = _decode_input(signature, signature_encoding)
+		ok = rsa_verify_sha1(raw, sig, public_key_pem=public_key_pem)
+		return OperationResult.success(data={"algorithm": "rsa-sha1", "verified": ok})
+	except (AsymmetricError, EncodingError, ValueError) as exc:
+		return OperationResult.failure(StatusCode.CRYPTO_ERROR, str(exc))
+
+
+def api_ecc_generate_keypair() -> OperationResult:
+	try:
+		private_key_pem, public_key_pem = ecc_generate_keypair_p160()
+		return OperationResult.success(
+			data={
+				"algorithm": "ecc-160",
+				"curve": "nist-p160",
+				"private_key_pem": private_key_pem,
+				"public_key_pem": public_key_pem,
+			}
+		)
+	except AsymmetricError as exc:
+		return OperationResult.failure(StatusCode.CRYPTO_ERROR, str(exc))
+
+
+def api_ecdsa_sign_sha1(
+	payload: str,
+	*,
+	private_key_pem: str,
+	input_encoding: str = "utf8",
+	output: str = "base64",
+) -> OperationResult:
+	try:
+		raw = _decode_input(payload, input_encoding)
+		sig = ecdsa_sign_sha1(raw, private_key_pem=private_key_pem)
+		return OperationResult.success(data={"algorithm": "ecdsa-sha1", "value": _encode_output(sig, output)})
+	except (AsymmetricError, EncodingError, ValueError) as exc:
+		return OperationResult.failure(StatusCode.CRYPTO_ERROR, str(exc))
+
+
+def api_ecdsa_verify_sha1(
+	payload: str,
+	*,
+	signature: str,
+	public_key_pem: str,
+	input_encoding: str = "utf8",
+	signature_encoding: str = "base64",
+) -> OperationResult:
+	try:
+		raw = _decode_input(payload, input_encoding)
+		sig = _decode_input(signature, signature_encoding)
+		ok = ecdsa_verify_sha1(raw, sig, public_key_pem=public_key_pem)
+		return OperationResult.success(data={"algorithm": "ecdsa-sha1", "verified": ok})
+	except (AsymmetricError, EncodingError, ValueError) as exc:
+		return OperationResult.failure(StatusCode.CRYPTO_ERROR, str(exc))
+
+
 __all__ = [
 	"api_utf8_encode",
 	"api_utf8_decode",
@@ -202,4 +338,12 @@ __all__ = [
 	"api_pbkdf2",
 	"api_symmetric_encrypt",
 	"api_symmetric_decrypt",
+	"api_rsa_generate_keypair",
+	"api_rsa_encrypt",
+	"api_rsa_decrypt",
+	"api_rsa_sign_sha1",
+	"api_rsa_verify_sha1",
+	"api_ecc_generate_keypair",
+	"api_ecdsa_sign_sha1",
+	"api_ecdsa_verify_sha1",
 ]

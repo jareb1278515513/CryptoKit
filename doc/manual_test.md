@@ -166,3 +166,81 @@ uv run python main.py symmetric-encrypt \
 - AES/SM4/RC6 均支持 encrypt/decrypt。
 - 至少覆盖 ECB/CBC/CTR 的可调用性（CTR 需传入 16 字节 iv）。
 - CLI 与 API 返回结构一致，异常输入返回 code 500。
+
+## M3: 公钥密码模块（RSA-1024 + ECC-160/ECDSA）
+
+### 1) 单元测试
+- 命令：
+
+```bash
+uv run pytest -q tests/unit/test_asymmetric.py
+```
+
+- 预期结果：全部通过。
+
+### 2) CLI 手动测试
+- 生成 RSA-1024 密钥对：
+
+```bash
+uv run python main.py rsa-generate
+```
+
+- 预期结果：
+  - code 为 200
+  - data.private_key_pem 和 data.public_key_pem 为非空 PEM 文本
+
+- RSA-SHA1 签名/验签（文件方式，便于粘贴）
+
+```bash
+# 先将 rsa-generate 输出中的私钥与公钥分别保存为 /tmp/rsa_pri.pem /tmp/rsa_pub.pem
+uv run python main.py rsa-sign --payload hello --private-key-file /tmp/rsa_pri.pem
+```
+
+- 预期结果：
+  - code 为 200
+  - data.value 为非空签名（base64）
+
+```bash
+# 将上一步签名替换到 <sig>
+uv run python main.py rsa-verify --payload hello --signature <sig> --public-key-file /tmp/rsa_pub.pem
+```
+
+- 预期结果：
+  - code 为 200
+  - data.verified 为 true
+
+- 生成 ECC-160 密钥对：
+
+```bash
+uv run python main.py ecc-generate
+```
+
+- 预期结果：
+  - code 为 200
+  - data.curve 为 nist-p160
+  - data.private_key_pem 与 data.public_key_pem 为非空
+
+- ECDSA-SHA1 签名/验签（文件方式）：
+
+```bash
+# 先将 ecc-generate 输出中的私钥与公钥分别保存为 /tmp/ecc_pri.pem /tmp/ecc_pub.pem
+uv run python main.py ecdsa-sign --payload hello --private-key-file /tmp/ecc_pri.pem
+```
+
+- 预期结果：
+  - code 为 200
+  - data.value 为非空签名（base64）
+
+```bash
+# 将上一步签名替换到 <sig>
+uv run python main.py ecdsa-verify --payload hello --signature <sig> --public-key-file /tmp/ecc_pub.pem
+```
+
+- 预期结果：
+  - code 为 200
+  - data.verified 为 true
+
+### 3) M3 验收标准
+- RSA-1024：密钥生成、加解密、RSA-SHA1 签名验签全部可用。
+- ECC-160（SECP160r1，对应 NIST P-160）：密钥生成、ECDSA-SHA1 签名验签可用。
+- API 与 CLI 均可调用，返回统一结构。

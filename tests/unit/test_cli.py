@@ -62,3 +62,40 @@ def test_cli_symmetric_encrypt_decrypt(capsys) -> None:
     decrypted_output = capsys.readouterr().out
     assert decrypt_code == 0
     assert '"value": "hello"' in decrypted_output
+
+
+def test_cli_rsa_sign_verify(capsys) -> None:
+    import json
+
+    gen_code = run_cli(["rsa-generate"])
+    gen_output = capsys.readouterr().out
+    assert gen_code == 0
+    keys = json.loads(gen_output)["data"]
+
+    sign_code = run_cli(
+        [
+            "rsa-sign",
+            "--payload",
+            "hello",
+            "--private-key-pem",
+            keys["private_key_pem"],
+        ]
+    )
+    sign_output = capsys.readouterr().out
+    assert sign_code == 0
+    signature = json.loads(sign_output)["data"]["value"]
+
+    verify_code = run_cli(
+        [
+            "rsa-verify",
+            "--payload",
+            "hello",
+            "--signature",
+            signature,
+            "--public-key-pem",
+            keys["public_key_pem"],
+        ]
+    )
+    verify_output = capsys.readouterr().out
+    assert verify_code == 0
+    assert '"verified": true' in verify_output

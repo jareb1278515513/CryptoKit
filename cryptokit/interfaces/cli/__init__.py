@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+from pathlib import Path
 
 from cryptokit.interfaces.api import (
 	api_base64_decode,
@@ -11,11 +12,27 @@ from cryptokit.interfaces.api import (
 	api_hash_text,
 	api_hmac_text,
 	api_pbkdf2,
+	api_ecc_generate_keypair,
+	api_ecdsa_sign_sha1,
+	api_ecdsa_verify_sha1,
+	api_rsa_decrypt,
+	api_rsa_encrypt,
+	api_rsa_generate_keypair,
+	api_rsa_sign_sha1,
+	api_rsa_verify_sha1,
 	api_symmetric_decrypt,
 	api_symmetric_encrypt,
 	api_utf8_decode,
 	api_utf8_encode,
 )
+
+
+def _load_text_arg(inline_value: str | None, file_path: str | None, arg_name: str) -> str:
+	if inline_value:
+		return inline_value
+	if file_path:
+		return Path(file_path).read_text(encoding="utf-8")
+	raise ValueError(f"参数 {arg_name} 不能为空")
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -73,6 +90,56 @@ def build_parser() -> argparse.ArgumentParser:
 	sym_decrypt_parser.add_argument("--input-encoding", default="hex", choices=["hex", "base64"])
 	sym_decrypt_parser.add_argument("--output", default="utf8", choices=["utf8", "hex", "base64"])
 
+	rsa_gen_parser = subparsers.add_parser("rsa-generate")
+	rsa_gen_parser.add_argument("--bits", type=int, default=1024)
+
+	rsa_encrypt_parser = subparsers.add_parser("rsa-encrypt")
+	rsa_encrypt_parser.add_argument("--payload", required=True)
+	rsa_encrypt_parser.add_argument("--public-key-pem")
+	rsa_encrypt_parser.add_argument("--public-key-file")
+	rsa_encrypt_parser.add_argument("--input-encoding", default="utf8", choices=["utf8", "hex", "base64"])
+	rsa_encrypt_parser.add_argument("--output", default="base64", choices=["hex", "base64"])
+
+	rsa_decrypt_parser = subparsers.add_parser("rsa-decrypt")
+	rsa_decrypt_parser.add_argument("--payload", required=True)
+	rsa_decrypt_parser.add_argument("--private-key-pem")
+	rsa_decrypt_parser.add_argument("--private-key-file")
+	rsa_decrypt_parser.add_argument("--input-encoding", default="base64", choices=["hex", "base64"])
+	rsa_decrypt_parser.add_argument("--output", default="utf8", choices=["utf8", "hex", "base64"])
+
+	rsa_sign_parser = subparsers.add_parser("rsa-sign")
+	rsa_sign_parser.add_argument("--payload", required=True)
+	rsa_sign_parser.add_argument("--private-key-pem")
+	rsa_sign_parser.add_argument("--private-key-file")
+	rsa_sign_parser.add_argument("--input-encoding", default="utf8", choices=["utf8", "hex", "base64"])
+	rsa_sign_parser.add_argument("--output", default="base64", choices=["hex", "base64"])
+
+	rsa_verify_parser = subparsers.add_parser("rsa-verify")
+	rsa_verify_parser.add_argument("--payload", required=True)
+	rsa_verify_parser.add_argument("--signature", required=True)
+	rsa_verify_parser.add_argument("--public-key-pem")
+	rsa_verify_parser.add_argument("--public-key-file")
+	rsa_verify_parser.add_argument("--input-encoding", default="utf8", choices=["utf8", "hex", "base64"])
+	rsa_verify_parser.add_argument("--signature-encoding", default="base64", choices=["hex", "base64"])
+
+	ecc_gen_parser = subparsers.add_parser("ecc-generate")
+	ecc_gen_parser.add_argument("--curve", default="nist-p160", choices=["nist-p160"])
+
+	ecdsa_sign_parser = subparsers.add_parser("ecdsa-sign")
+	ecdsa_sign_parser.add_argument("--payload", required=True)
+	ecdsa_sign_parser.add_argument("--private-key-pem")
+	ecdsa_sign_parser.add_argument("--private-key-file")
+	ecdsa_sign_parser.add_argument("--input-encoding", default="utf8", choices=["utf8", "hex", "base64"])
+	ecdsa_sign_parser.add_argument("--output", default="base64", choices=["hex", "base64"])
+
+	ecdsa_verify_parser = subparsers.add_parser("ecdsa-verify")
+	ecdsa_verify_parser.add_argument("--payload", required=True)
+	ecdsa_verify_parser.add_argument("--signature", required=True)
+	ecdsa_verify_parser.add_argument("--public-key-pem")
+	ecdsa_verify_parser.add_argument("--public-key-file")
+	ecdsa_verify_parser.add_argument("--input-encoding", default="utf8", choices=["utf8", "hex", "base64"])
+	ecdsa_verify_parser.add_argument("--signature-encoding", default="base64", choices=["hex", "base64"])
+
 	return parser
 
 
@@ -117,6 +184,96 @@ def run_cli(argv: list[str] | None = None) -> int:
 			input_encoding=args.input_encoding,
 			output=args.output,
 		)
+	elif args.command == "rsa-generate":
+		result = api_rsa_generate_keypair(bits=args.bits)
+	elif args.command == "rsa-encrypt":
+		try:
+			public_key_pem = _load_text_arg(args.public_key_pem, args.public_key_file, "public_key")
+			result = api_rsa_encrypt(
+				args.payload,
+				public_key_pem=public_key_pem,
+				input_encoding=args.input_encoding,
+				output=args.output,
+			)
+		except ValueError as exc:
+			from cryptokit.shared.errors import StatusCode
+			from cryptokit.shared.result import OperationResult
+
+			result = OperationResult.failure(StatusCode.INVALID_INPUT, str(exc))
+	elif args.command == "rsa-decrypt":
+		try:
+			private_key_pem = _load_text_arg(args.private_key_pem, args.private_key_file, "private_key")
+			result = api_rsa_decrypt(
+				args.payload,
+				private_key_pem=private_key_pem,
+				input_encoding=args.input_encoding,
+				output=args.output,
+			)
+		except ValueError as exc:
+			from cryptokit.shared.errors import StatusCode
+			from cryptokit.shared.result import OperationResult
+
+			result = OperationResult.failure(StatusCode.INVALID_INPUT, str(exc))
+	elif args.command == "rsa-sign":
+		try:
+			private_key_pem = _load_text_arg(args.private_key_pem, args.private_key_file, "private_key")
+			result = api_rsa_sign_sha1(
+				args.payload,
+				private_key_pem=private_key_pem,
+				input_encoding=args.input_encoding,
+				output=args.output,
+			)
+		except ValueError as exc:
+			from cryptokit.shared.errors import StatusCode
+			from cryptokit.shared.result import OperationResult
+
+			result = OperationResult.failure(StatusCode.INVALID_INPUT, str(exc))
+	elif args.command == "rsa-verify":
+		try:
+			public_key_pem = _load_text_arg(args.public_key_pem, args.public_key_file, "public_key")
+			result = api_rsa_verify_sha1(
+				args.payload,
+				signature=args.signature,
+				public_key_pem=public_key_pem,
+				input_encoding=args.input_encoding,
+				signature_encoding=args.signature_encoding,
+			)
+		except ValueError as exc:
+			from cryptokit.shared.errors import StatusCode
+			from cryptokit.shared.result import OperationResult
+
+			result = OperationResult.failure(StatusCode.INVALID_INPUT, str(exc))
+	elif args.command == "ecc-generate":
+		result = api_ecc_generate_keypair()
+	elif args.command == "ecdsa-sign":
+		try:
+			private_key_pem = _load_text_arg(args.private_key_pem, args.private_key_file, "private_key")
+			result = api_ecdsa_sign_sha1(
+				args.payload,
+				private_key_pem=private_key_pem,
+				input_encoding=args.input_encoding,
+				output=args.output,
+			)
+		except ValueError as exc:
+			from cryptokit.shared.errors import StatusCode
+			from cryptokit.shared.result import OperationResult
+
+			result = OperationResult.failure(StatusCode.INVALID_INPUT, str(exc))
+	elif args.command == "ecdsa-verify":
+		try:
+			public_key_pem = _load_text_arg(args.public_key_pem, args.public_key_file, "public_key")
+			result = api_ecdsa_verify_sha1(
+				args.payload,
+				signature=args.signature,
+				public_key_pem=public_key_pem,
+				input_encoding=args.input_encoding,
+				signature_encoding=args.signature_encoding,
+			)
+		except ValueError as exc:
+			from cryptokit.shared.errors import StatusCode
+			from cryptokit.shared.result import OperationResult
+
+			result = OperationResult.failure(StatusCode.INVALID_INPUT, str(exc))
 	else:
 		result = api_pbkdf2(
 			args.password,
