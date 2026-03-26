@@ -1,9 +1,11 @@
-"""Shared error types and status codes."""
+"""共享错误类型与状态码定义。"""
 
 from enum import IntEnum
 
 
 class StatusCode(IntEnum):
+    """统一业务状态码枚举。"""
+
     SUCCESS = 200
     INVALID_INPUT = 400
     INVALID_KEY_SIZE = 401
@@ -13,4 +15,4 @@ class StatusCode(IntEnum):
 
 
 class CryptoKitError(Exception):
-    """Base exception for all project-level errors."""
+    """项目级异常基类。"""

@@ -10,11 +10,32 @@ class SymmetricError(ValueError):
 
 
 def _pkcs7_pad(data: bytes, block_size: int = 16) -> bytes:
+    """执行 PKCS#7 填充。
+
+    Args:
+        data: 原始明文字节串。
+        block_size: 分组大小。
+
+    Returns:
+        bytes: 填充后的字节串。
+    """
     pad_len = block_size - (len(data) % block_size)
     return data + bytes([pad_len]) * pad_len
 
 
 def _pkcs7_unpad(data: bytes, block_size: int = 16) -> bytes:
+    """移除 PKCS#7 填充。
+
+    Args:
+        data: 待去填充字节串。
+        block_size: 分组大小。
+
+    Returns:
+        bytes: 去填充后的字节串。
+
+    Raises:
+        SymmetricError: 填充格式不合法时抛出。
+    """
     if not data or len(data) % block_size != 0:
         raise SymmetricError("填充数据长度无效")
     pad_len = data[-1]
@@ -26,6 +47,17 @@ def _pkcs7_unpad(data: bytes, block_size: int = 16) -> bytes:
 
 
 def _validate_key(key: bytes) -> bytes:
+    """校验 AES 密钥长度。
+
+    Args:
+        key: 输入密钥字节串。
+
+    Returns:
+        bytes: 标准化后的密钥。
+
+    Raises:
+        SymmetricError: 密钥长度不合法时抛出。
+    """
     normalized = bytes(key)
     if len(normalized) not in (16, 24, 32):
         raise SymmetricError("AES 密钥长度必须为 16、24 或 32 字节")
@@ -33,6 +65,20 @@ def _validate_key(key: bytes) -> bytes:
 
 
 def aes_encrypt(raw: bytes, key: bytes, mode: str = "ecb", iv: bytes | None = None) -> bytes:
+    """执行 AES 加密。
+
+    Args:
+        raw: 明文字节串。
+        key: 密钥字节串。
+        mode: 模式，支持 `ecb`、`cbc`、`ctr`。
+        iv: 初始化向量，`cbc/ctr` 模式必填。
+
+    Returns:
+        bytes: 密文字节串。
+
+    Raises:
+        SymmetricError: 参数或模式不合法时抛出。
+    """
     payload = bytes(raw)
     secret = _validate_key(key)
     mode_lower = mode.lower()
@@ -57,6 +103,20 @@ def aes_encrypt(raw: bytes, key: bytes, mode: str = "ecb", iv: bytes | None = No
 
 
 def aes_decrypt(raw: bytes, key: bytes, mode: str = "ecb", iv: bytes | None = None) -> bytes:
+    """执行 AES 解密。
+
+    Args:
+        raw: 密文字节串。
+        key: 密钥字节串。
+        mode: 模式，支持 `ecb`、`cbc`、`ctr`。
+        iv: 初始化向量，`cbc/ctr` 模式必填。
+
+    Returns:
+        bytes: 明文字节串。
+
+    Raises:
+        SymmetricError: 参数或模式不合法时抛出。
+    """
     payload = bytes(raw)
     secret = _validate_key(key)
     mode_lower = mode.lower()

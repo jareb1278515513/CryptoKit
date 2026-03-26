@@ -1,1 +1,1 @@
-"""Key serialization and IO adapters."""
+"""密钥序列化与读写适配器。"""

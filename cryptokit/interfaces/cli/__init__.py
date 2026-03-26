@@ -28,6 +28,19 @@ from cryptokit.interfaces.api import (
 
 
 def _load_text_arg(inline_value: str | None, file_path: str | None, arg_name: str) -> str:
+	"""优先读取内联参数，否则从文件读取文本参数。
+
+	Args:
+		inline_value: 命令行内联参数值。
+		file_path: 文件路径参数。
+		arg_name: 参数名，用于错误提示。
+
+	Returns:
+		str: 读取到的文本内容。
+
+	Raises:
+		ValueError: 内联值和文件路径均缺失时抛出。
+	"""
 	if inline_value:
 		return inline_value
 	if file_path:
@@ -36,6 +49,7 @@ def _load_text_arg(inline_value: str | None, file_path: str | None, arg_name: st
 
 
 def build_parser() -> argparse.ArgumentParser:
+	"""构建 CryptoKit CLI 参数解析器。"""
 	parser = argparse.ArgumentParser(prog="cryptokit", description="CryptoKit 命令行工具")
 	parser.add_argument("--trace", action="store_true", help="显示算法执行中间过程")
 	subparsers = parser.add_subparsers(dest="command", required=True)
@@ -145,6 +159,14 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def run_cli(argv: list[str] | None = None) -> int:
+	"""执行 CLI 命令并输出 JSON 结果。
+
+	Args:
+		argv: 可选命令参数列表；为空时读取系统参数。
+
+	Returns:
+		int: 进程退出码，成功为 0，失败为 1。
+	"""
 	parser = build_parser()
 	args = parser.parse_args(argv)
 

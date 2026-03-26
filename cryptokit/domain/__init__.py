@@ -1,1 +1,1 @@
-"""Domain layer core cryptographic rules."""
+"""领域层：核心密码学规则与算法实现。"""

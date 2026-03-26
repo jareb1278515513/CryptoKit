@@ -1,1 +1,1 @@
-"""Third-party crypto backend wrappers."""
+"""第三方密码后端封装。"""

@@ -1,1 +1,1 @@
-"""Infrastructure adapters and backends."""
+"""基础设施层：后端适配与外部依赖封装。"""

@@ -1,1 +1,1 @@
-"""Shared cross-layer utilities."""
+"""跨层共享工具与基础类型。"""

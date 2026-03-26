@@ -1,1 +1,1 @@
-"""Interface layer adapters."""
+"""接口层适配器集合。"""

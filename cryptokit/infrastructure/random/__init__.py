@@ -1,1 +1,1 @@
-"""Random source adapters."""
+"""随机源适配器。"""

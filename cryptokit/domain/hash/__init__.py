@@ -1,4 +1,4 @@
-"""Hash and KDF domain modules."""
+"""哈希与密钥派生领域模块导出。"""
 
 from .digests import (
 	SUPPORTED_DIGESTS,

@@ -36,24 +36,29 @@ from cryptokit.shared.result import OperationResult
 
 
 def api_utf8_encode(text: str, output: str = "hex", trace: bool = False) -> OperationResult:
+    """对文本执行 UTF-8 编码。"""
     return execute_utf8_encode(TextTransformCommand(payload=text, output=output, trace=trace))
 
 
 def api_utf8_decode(hex_or_base64_payload: str, encoding: str = "hex", trace: bool = False) -> OperationResult:
+    """将十六进制或 Base64 文本解码为 UTF-8 字符串。"""
     return execute_utf8_decode(
         TextTransformCommand(payload=hex_or_base64_payload, input_encoding=encoding, trace=trace)
     )
 
 
 def api_base64_encode(text: str, trace: bool = False) -> OperationResult:
+    """对文本执行 Base64 编码。"""
     return execute_base64_encode(TextTransformCommand(payload=text, trace=trace))
 
 
 def api_base64_decode(payload: str, trace: bool = False) -> OperationResult:
+    """对 Base64 文本执行解码。"""
     return execute_base64_decode(TextTransformCommand(payload=payload, trace=trace))
 
 
 def api_hash_text(text: str, algorithm: str = "sha256", output: str = "hex", trace: bool = False) -> OperationResult:
+    """计算文本摘要。"""
     return execute_hash(HashCommand(payload=text, algorithm=algorithm, output=output, trace=trace))
 
 
@@ -64,6 +69,7 @@ def api_hmac_text(
     output: str = "hex",
     trace: bool = False,
 ) -> OperationResult:
+    """计算文本 HMAC。"""
     return execute_hmac(HmacCommand(payload=text, key=key, algorithm=algorithm, output=output, trace=trace))
 
 
@@ -76,6 +82,7 @@ def api_pbkdf2(
     output: str = "hex",
     trace: bool = False,
 ) -> OperationResult:
+    """执行 PBKDF2 密钥派生。"""
     return execute_pbkdf2(
         Pbkdf2Command(
             password=password,
@@ -100,6 +107,7 @@ def api_symmetric_encrypt(
     output: str = "hex",
     trace: bool = False,
 ) -> OperationResult:
+    """执行对称加密。"""
     return execute_symmetric_encrypt(
         SymmetricCommand(
             payload=payload,
@@ -125,6 +133,7 @@ def api_symmetric_decrypt(
     output: str = "utf8",
     trace: bool = False,
 ) -> OperationResult:
+    """执行对称解密。"""
     return execute_symmetric_decrypt(
         SymmetricCommand(
             payload=payload,
@@ -140,6 +149,7 @@ def api_symmetric_decrypt(
 
 
 def api_rsa_generate_keypair(bits: int = 1024, trace: bool = False) -> OperationResult:
+    """生成 RSA 密钥对。"""
     return execute_rsa_keygen(RsaKeygenCommand(bits=bits, trace=trace))
 
 
@@ -151,6 +161,7 @@ def api_rsa_encrypt(
     output: str = "base64",
     trace: bool = False,
 ) -> OperationResult:
+    """执行 RSA 加密。"""
     return execute_rsa_encrypt(
         AsymmetricCryptoCommand(
             payload=payload,
@@ -170,6 +181,7 @@ def api_rsa_decrypt(
     output: str = "utf8",
     trace: bool = False,
 ) -> OperationResult:
+    """执行 RSA 解密。"""
     return execute_rsa_decrypt(
         AsymmetricCryptoCommand(
             payload=payload,
@@ -189,6 +201,7 @@ def api_rsa_sign_sha1(
     output: str = "base64",
     trace: bool = False,
 ) -> OperationResult:
+    """执行 RSA-SHA1 签名。"""
     return execute_rsa_sign(
         AsymmetricCryptoCommand(
             payload=payload,
@@ -209,6 +222,7 @@ def api_rsa_verify_sha1(
     signature_encoding: str = "base64",
     trace: bool = False,
 ) -> OperationResult:
+    """执行 RSA-SHA1 验签。"""
     return execute_rsa_verify(
         VerifyCommand(
             payload=payload,
@@ -222,6 +236,7 @@ def api_rsa_verify_sha1(
 
 
 def api_ecc_generate_keypair(trace: bool = False) -> OperationResult:
+    """生成 NIST-P160 ECC 密钥对。"""
     return execute_ecc_keygen(EccKeygenCommand(curve="nist-p160", trace=trace))
 
 
@@ -233,6 +248,7 @@ def api_ecdsa_sign_sha1(
     output: str = "base64",
     trace: bool = False,
 ) -> OperationResult:
+    """执行 ECDSA-SHA1 签名。"""
     return execute_ecdsa_sign(
         AsymmetricCryptoCommand(
             payload=payload,
@@ -253,6 +269,7 @@ def api_ecdsa_verify_sha1(
     signature_encoding: str = "base64",
     trace: bool = False,
 ) -> OperationResult:
+    """执行 ECDSA-SHA1 验签。"""
     return execute_ecdsa_verify(
         VerifyCommand(
             payload=payload,

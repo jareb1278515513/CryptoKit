@@ -17,16 +17,29 @@ BLOCK_BYTES = 16
 
 
 def _rotl(x: int, n: int) -> int:
+    """32 位循环左移。"""
     n &= 31
     return ((x << n) | (x >> (W - n))) & MASK
 
 
 def _rotr(x: int, n: int) -> int:
+    """32 位循环右移。"""
     n &= 31
     return ((x >> n) | (x << (W - n))) & MASK
 
 
 def _expand_key(key: bytes) -> list[int]:
+    """将用户密钥扩展为 RC6 轮密钥数组。
+
+    Args:
+        key: 原始密钥字节串。
+
+    Returns:
+        list[int]: 轮密钥数组。
+
+    Raises:
+        SymmetricError: 密钥为空时抛出。
+    """
     secret = bytes(key)
     if len(secret) == 0:
         raise SymmetricError("RC6 密钥不能为空")
@@ -53,6 +66,7 @@ def _expand_key(key: bytes) -> list[int]:
 
 
 def _encrypt_block(block: bytes, s: list[int]) -> bytes:
+    """加密单个 128 位分组。"""
     a, b, c, d = struct.unpack("<4I", block)
     b = (b + s[0]) & MASK
     d = (d + s[1]) & MASK
@@ -70,6 +84,7 @@ def _encrypt_block(block: bytes, s: list[int]) -> bytes:
 
 
 def _decrypt_block(block: bytes, s: list[int]) -> bytes:
+    """解密单个 128 位分组。"""
     a, b, c, d = struct.unpack("<4I", block)
     c = (c - s[2 * R + 3]) & MASK
     a = (a - s[2 * R + 2]) & MASK
@@ -87,6 +102,20 @@ def _decrypt_block(block: bytes, s: list[int]) -> bytes:
 
 
 def rc6_encrypt(raw: bytes, key: bytes, mode: str = "ecb", iv: bytes | None = None) -> bytes:
+    """执行 RC6 加密。
+
+    Args:
+        raw: 明文字节串。
+        key: 密钥字节串。
+        mode: 模式，支持 `ecb`、`cbc`、`ctr`。
+        iv: 初始化向量，`cbc/ctr` 模式必填。
+
+    Returns:
+        bytes: 密文字节串。
+
+    Raises:
+        SymmetricError: 参数或模式不合法时抛出。
+    """
     mode_lower = mode.lower()
     if mode_lower not in ("ecb", "cbc", "ctr"):
         raise SymmetricError("不支持的 RC6 模式")
@@ -123,6 +152,20 @@ def rc6_encrypt(raw: bytes, key: bytes, mode: str = "ecb", iv: bytes | None = No
 
 
 def rc6_decrypt(raw: bytes, key: bytes, mode: str = "ecb", iv: bytes | None = None) -> bytes:
+    """执行 RC6 解密。
+
+    Args:
+        raw: 密文字节串。
+        key: 密钥字节串。
+        mode: 模式，支持 `ecb`、`cbc`、`ctr`。
+        iv: 初始化向量，`cbc/ctr` 模式必填。
+
+    Returns:
+        bytes: 明文字节串。
+
+    Raises:
+        SymmetricError: 参数或模式不合法时抛出。
+    """
     mode_lower = mode.lower()
     if mode_lower not in ("ecb", "cbc", "ctr"):
         raise SymmetricError("不支持的 RC6 模式")

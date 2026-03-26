@@ -38,6 +38,16 @@ from cryptokit.shared.result import OperationResult
 
 
 def _with_trace(data: dict, enabled: bool, steps: list[str]) -> dict:
+    """按需向返回数据注入执行轨迹。
+
+    Args:
+        data: 原始返回数据。
+        enabled: 是否开启轨迹输出。
+        steps: 轨迹步骤文本列表。
+
+    Returns:
+        dict: 最终返回数据。
+    """
     if not enabled:
         return data
     payload = dict(data)
@@ -46,6 +56,18 @@ def _with_trace(data: dict, enabled: bool, steps: list[str]) -> dict:
 
 
 def _encode_output(raw: bytes, output: str) -> str | bytes:
+    """按指定格式编码二进制输出。
+
+    Args:
+        raw: 原始字节数据。
+        output: 目标输出格式，支持 `raw`、`hex`、`base64`。
+
+    Returns:
+        str | bytes: 编码后的输出值。
+
+    Raises:
+        ValueError: 输出格式不在支持范围内时抛出。
+    """
     mode = output.lower()
     if mode == "raw":
         return raw
@@ -57,6 +79,18 @@ def _encode_output(raw: bytes, output: str) -> str | bytes:
 
 
 def _decode_input(payload: str, encoding: str) -> bytes:
+    """按指定格式解码输入内容。
+
+    Args:
+        payload: 输入文本。
+        encoding: 输入编码格式，支持 `utf8`、`hex`、`base64`。
+
+    Returns:
+        bytes: 解码后的字节串。
+
+    Raises:
+        ValueError: 输入编码格式不在支持范围内时抛出。
+    """
     mode = encoding.lower()
     if mode == "utf8":
         return utf8_encode(payload)
@@ -68,6 +102,14 @@ def _decode_input(payload: str, encoding: str) -> bytes:
 
 
 def execute_utf8_encode(command: TextTransformCommand) -> OperationResult:
+    """执行 UTF-8 编码用例。
+
+    Args:
+        command: 文本转换命令。
+
+    Returns:
+        OperationResult: 统一结果对象。
+    """
     try:
         raw = utf8_encode(command.payload)
         return OperationResult.success(
@@ -86,6 +128,14 @@ def execute_utf8_encode(command: TextTransformCommand) -> OperationResult:
 
 
 def execute_utf8_decode(command: TextTransformCommand) -> OperationResult:
+    """执行 UTF-8 解码用例。
+
+    Args:
+        command: 文本转换命令。
+
+    Returns:
+        OperationResult: 统一结果对象。
+    """
     try:
         mode = command.input_encoding.lower()
         if mode == "hex":
@@ -100,6 +150,14 @@ def execute_utf8_decode(command: TextTransformCommand) -> OperationResult:
 
 
 def execute_base64_encode(command: TextTransformCommand) -> OperationResult:
+    """执行 Base64 编码用例。
+
+    Args:
+        command: 文本转换命令。
+
+    Returns:
+        OperationResult: 统一结果对象。
+    """
     try:
         return OperationResult.success(data={"value": base64_encode(utf8_encode(command.payload))})
     except EncodingError as exc:
@@ -107,6 +165,14 @@ def execute_base64_encode(command: TextTransformCommand) -> OperationResult:
 
 
 def execute_base64_decode(command: TextTransformCommand) -> OperationResult:
+    """执行 Base64 解码用例。
+
+    Args:
+        command: 文本转换命令。
+
+    Returns:
+        OperationResult: 统一结果对象。
+    """
     try:
         return OperationResult.success(data={"value": utf8_decode(base64_decode(command.payload))})
     except EncodingError as exc:
@@ -114,6 +180,14 @@ def execute_base64_decode(command: TextTransformCommand) -> OperationResult:
 
 
 def execute_hash(command: HashCommand) -> OperationResult:
+    """执行消息摘要计算用例。
+
+    Args:
+        command: 哈希计算命令。
+
+    Returns:
+        OperationResult: 统一结果对象。
+    """
     try:
         raw = digest(utf8_encode(command.payload), command.algorithm)
         return OperationResult.success(
@@ -137,6 +211,14 @@ def execute_hash(command: HashCommand) -> OperationResult:
 
 
 def execute_hmac(command: HmacCommand) -> OperationResult:
+    """执行 HMAC 计算用例。
+
+    Args:
+        command: HMAC 命令。
+
+    Returns:
+        OperationResult: 统一结果对象。
+    """
     try:
         raw = hmac_digest(utf8_encode(command.payload), utf8_encode(command.key), command.algorithm)
         return OperationResult.success(
@@ -156,6 +238,14 @@ def execute_hmac(command: HmacCommand) -> OperationResult:
 
 
 def execute_pbkdf2(command: Pbkdf2Command) -> OperationResult:
+    """执行 PBKDF2 派生用例。
+
+    Args:
+        command: PBKDF2 命令。
+
+    Returns:
+        OperationResult: 统一结果对象。
+    """
     try:
         raw = pbkdf2(
             password=utf8_encode(command.password),
@@ -186,6 +276,14 @@ def execute_pbkdf2(command: Pbkdf2Command) -> OperationResult:
 
 
 def execute_symmetric_encrypt(command: SymmetricCommand) -> OperationResult:
+    """执行对称加密用例。
+
+    Args:
+        command: 对称加密命令。
+
+    Returns:
+        OperationResult: 统一结果对象。
+    """
     try:
         raw = _decode_input(command.payload, command.input_encoding)
     except (EncodingError, ValueError) as exc:
@@ -228,6 +326,14 @@ def execute_symmetric_encrypt(command: SymmetricCommand) -> OperationResult:
 
 
 def execute_symmetric_decrypt(command: SymmetricCommand) -> OperationResult:
+    """执行对称解密用例。
+
+    Args:
+        command: 对称解密命令。
+
+    Returns:
+        OperationResult: 统一结果对象。
+    """
     try:
         raw = _decode_input(command.payload, command.input_encoding)
     except (EncodingError, ValueError) as exc:
@@ -271,6 +377,14 @@ def execute_symmetric_decrypt(command: SymmetricCommand) -> OperationResult:
 
 
 def execute_rsa_keygen(command: RsaKeygenCommand) -> OperationResult:
+    """执行 RSA 密钥对生成用例。
+
+    Args:
+        command: RSA 密钥生成命令。
+
+    Returns:
+        OperationResult: 统一结果对象。
+    """
     try:
         private_key_pem, public_key_pem = rsa_generate_keypair(bits=command.bits)
         return OperationResult.success(
@@ -295,6 +409,14 @@ def execute_rsa_keygen(command: RsaKeygenCommand) -> OperationResult:
 
 
 def execute_rsa_encrypt(command: AsymmetricCryptoCommand) -> OperationResult:
+    """执行 RSA 加密用例。
+
+    Args:
+        command: 公钥密码操作命令。
+
+    Returns:
+        OperationResult: 统一结果对象。
+    """
     try:
         raw = _decode_input(command.payload, command.input_encoding)
         cipher = rsa_encrypt(raw, public_key_pem=command.key_pem)
@@ -315,6 +437,14 @@ def execute_rsa_encrypt(command: AsymmetricCryptoCommand) -> OperationResult:
 
 
 def execute_rsa_decrypt(command: AsymmetricCryptoCommand) -> OperationResult:
+    """执行 RSA 解密用例。
+
+    Args:
+        command: 公钥密码操作命令。
+
+    Returns:
+        OperationResult: 统一结果对象。
+    """
     try:
         raw = _decode_input(command.payload, command.input_encoding)
         plain = rsa_decrypt(raw, private_key_pem=command.key_pem)
@@ -336,6 +466,14 @@ def execute_rsa_decrypt(command: AsymmetricCryptoCommand) -> OperationResult:
 
 
 def execute_rsa_sign(command: AsymmetricCryptoCommand) -> OperationResult:
+    """执行 RSA-SHA1 签名用例。
+
+    Args:
+        command: 公钥密码操作命令。
+
+    Returns:
+        OperationResult: 统一结果对象。
+    """
     try:
         raw = _decode_input(command.payload, command.input_encoding)
         sig = rsa_sign_sha1(raw, private_key_pem=command.key_pem)
@@ -356,6 +494,14 @@ def execute_rsa_sign(command: AsymmetricCryptoCommand) -> OperationResult:
 
 
 def execute_rsa_verify(command: VerifyCommand) -> OperationResult:
+    """执行 RSA-SHA1 验签用例。
+
+    Args:
+        command: 验签命令。
+
+    Returns:
+        OperationResult: 统一结果对象。
+    """
     try:
         raw = _decode_input(command.payload, command.input_encoding)
         sig = _decode_input(command.signature, command.signature_encoding)
@@ -377,6 +523,14 @@ def execute_rsa_verify(command: VerifyCommand) -> OperationResult:
 
 
 def execute_ecc_keygen(command: EccKeygenCommand) -> OperationResult:
+    """执行 ECC 密钥对生成用例。
+
+    Args:
+        command: ECC 密钥生成命令。
+
+    Returns:
+        OperationResult: 统一结果对象。
+    """
     if command.curve.lower() != "nist-p160":
         return OperationResult.failure(StatusCode.INVALID_INPUT, "仅支持 nist-p160 曲线")
     try:
@@ -403,6 +557,14 @@ def execute_ecc_keygen(command: EccKeygenCommand) -> OperationResult:
 
 
 def execute_ecdsa_sign(command: AsymmetricCryptoCommand) -> OperationResult:
+    """执行 ECDSA-SHA1 签名用例。
+
+    Args:
+        command: 公钥密码操作命令。
+
+    Returns:
+        OperationResult: 统一结果对象。
+    """
     try:
         raw = _decode_input(command.payload, command.input_encoding)
         sig = ecdsa_sign_sha1(raw, private_key_pem=command.key_pem)
@@ -423,6 +585,14 @@ def execute_ecdsa_sign(command: AsymmetricCryptoCommand) -> OperationResult:
 
 
 def execute_ecdsa_verify(command: VerifyCommand) -> OperationResult:
+    """执行 ECDSA-SHA1 验签用例。
+
+    Args:
+        command: 验签命令。
+
+    Returns:
+        OperationResult: 统一结果对象。
+    """
     try:
         raw = _decode_input(command.payload, command.input_encoding)
         sig = _decode_input(command.signature, command.signature_encoding)

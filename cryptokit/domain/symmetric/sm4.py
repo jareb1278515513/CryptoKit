@@ -8,6 +8,17 @@ BLOCK_SIZE = 16
 
 
 def _validate_key(key: bytes) -> bytes:
+    """校验 SM4 密钥长度。
+
+    Args:
+        key: 输入密钥字节串。
+
+    Returns:
+        bytes: 标准化后的密钥。
+
+    Raises:
+        SymmetricError: 密钥长度不合法时抛出。
+    """
     normalized = bytes(key)
     if len(normalized) != BLOCK_SIZE:
         raise SymmetricError("SM4 密钥长度必须为 16 字节")
@@ -22,6 +33,21 @@ def _cryptography_sm4(
     iv: bytes | None,
     encrypt: bool,
 ) -> bytes:
+    """调用 cryptography 后端执行 SM4。
+
+    Args:
+        raw: 输入数据。
+        key: 密钥字节串。
+        mode: 分组模式。
+        iv: 初始化向量。
+        encrypt: 是否执行加密。
+
+    Returns:
+        bytes: 后端计算结果。
+
+    Raises:
+        SymmetricError: 后端不可用或参数非法时抛出。
+    """
     try:
         from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
     except Exception as exc:
@@ -47,6 +73,17 @@ def _cryptography_sm4(
 
 
 def sm4_encrypt(raw: bytes, key: bytes, mode: str = "ecb", iv: bytes | None = None) -> bytes:
+    """执行 SM4 加密。
+
+    Args:
+        raw: 明文字节串。
+        key: 密钥字节串。
+        mode: 模式，支持 `ecb`、`cbc`、`ctr`。
+        iv: 初始化向量，`cbc/ctr` 模式必填。
+
+    Returns:
+        bytes: 密文字节串。
+    """
     payload = bytes(raw)
     secret = _validate_key(key)
     mode_lower = mode.lower()
@@ -58,6 +95,17 @@ def sm4_encrypt(raw: bytes, key: bytes, mode: str = "ecb", iv: bytes | None = No
 
 
 def sm4_decrypt(raw: bytes, key: bytes, mode: str = "ecb", iv: bytes | None = None) -> bytes:
+    """执行 SM4 解密。
+
+    Args:
+        raw: 密文字节串。
+        key: 密钥字节串。
+        mode: 模式，支持 `ecb`、`cbc`、`ctr`。
+        iv: 初始化向量，`cbc/ctr` 模式必填。
+
+    Returns:
+        bytes: 明文字节串。
+    """
     payload = bytes(raw)
     secret = _validate_key(key)
     mode_lower = mode.lower()

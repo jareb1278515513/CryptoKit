@@ -19,6 +19,17 @@ class HashError(ValueError):
 
 
 def _require_algorithm(algorithm: str) -> str:
+    """校验并标准化摘要算法名称。
+
+    Args:
+        algorithm: 用户输入算法名。
+
+    Returns:
+        str: 标准化后的算法名（小写）。
+
+    Raises:
+        HashError: 算法不受支持时抛出。
+    """
     lowered = algorithm.lower()
     if lowered not in SUPPORTED_DIGESTS:
         raise HashError(f"不支持的摘要算法: {algorithm}")
@@ -26,6 +37,17 @@ def _require_algorithm(algorithm: str) -> str:
 
 
 def _ripemd160_digest(raw: bytes) -> bytes:
+    """计算 RIPEMD160 摘要，支持后端回退。
+
+    Args:
+        raw: 待摘要数据。
+
+    Returns:
+        bytes: 摘要值。
+
+    Raises:
+        HashError: 本地后端均不可用时抛出。
+    """
     payload = bytes(raw)
 
     if "ripemd160" in hashlib.algorithms_available:
@@ -42,6 +64,18 @@ def _ripemd160_digest(raw: bytes) -> bytes:
 
 
 def digest(raw: bytes, algorithm: str) -> bytes:
+    """计算指定算法的消息摘要。
+
+    Args:
+        raw: 待摘要数据。
+        algorithm: 摘要算法名称。
+
+    Returns:
+        bytes: 摘要结果。
+
+    Raises:
+        HashError: 输入无效或算法计算失败时抛出。
+    """
     algo = _require_algorithm(algorithm)
     try:
         if algo == "ripemd160":
@@ -52,10 +86,32 @@ def digest(raw: bytes, algorithm: str) -> bytes:
 
 
 def digest_hex(raw: bytes, algorithm: str) -> str:
+    """计算消息摘要并返回十六进制文本。
+
+    Args:
+        raw: 待摘要数据。
+        algorithm: 摘要算法名称。
+
+    Returns:
+        str: 十六进制摘要文本。
+    """
     return digest(raw=raw, algorithm=algorithm).hex()
 
 
 def hmac_digest(raw: bytes, key: bytes, algorithm: str) -> bytes:
+    """计算 HMAC 摘要。
+
+    Args:
+        raw: 待认证消息。
+        key: HMAC 密钥。
+        algorithm: 哈希算法名称。
+
+    Returns:
+        bytes: HMAC 结果。
+
+    Raises:
+        HashError: 输入无效或计算失败时抛出。
+    """
     algo = _require_algorithm(algorithm)
     try:
         return hmac.new(bytes(key), bytes(raw), algo).digest()
@@ -64,6 +120,16 @@ def hmac_digest(raw: bytes, key: bytes, algorithm: str) -> bytes:
 
 
 def hmac_digest_hex(raw: bytes, key: bytes, algorithm: str) -> str:
+    """计算 HMAC 并返回十六进制文本。
+
+    Args:
+        raw: 待认证消息。
+        key: HMAC 密钥。
+        algorithm: 哈希算法名称。
+
+    Returns:
+        str: 十六进制 HMAC 文本。
+    """
     return hmac_digest(raw=raw, key=key, algorithm=algorithm).hex()
 
 
@@ -74,6 +140,21 @@ def pbkdf2(
     dklen: int = 32,
     algorithm: str = "sha256",
 ) -> bytes:
+    """执行 PBKDF2 密钥派生。
+
+    Args:
+        password: 口令字节串。
+        salt: 盐值字节串。
+        iterations: 迭代次数。
+        dklen: 输出密钥长度（字节）。
+        algorithm: PRF 哈希算法名称。
+
+    Returns:
+        bytes: 派生密钥。
+
+    Raises:
+        HashError: 参数非法或后端计算失败时抛出。
+    """
     algo = _require_algorithm(algorithm)
     if iterations <= 0:
         raise HashError("迭代次数必须大于 0")
