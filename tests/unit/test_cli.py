@@ -1,3 +1,6 @@
+import json
+
+from cryptokit.infrastructure import key_io
 from cryptokit.interfaces.cli import run_cli
 
 
@@ -65,8 +68,6 @@ def test_cli_symmetric_encrypt_decrypt(capsys) -> None:
 
 
 def test_cli_rsa_sign_verify(capsys) -> None:
-    import json
-
     gen_code = run_cli(["rsa-generate"])
     gen_output = capsys.readouterr().out
     assert gen_code == 0
@@ -99,3 +100,43 @@ def test_cli_rsa_sign_verify(capsys) -> None:
     verify_output = capsys.readouterr().out
     assert verify_code == 0
     assert '"verified": true' in verify_output
+
+
+def test_cli_rsa_generate_saves_default_keyfiles(capsys, monkeypatch, tmp_path) -> None:
+    monkeypatch.setattr(key_io, "DEFAULT_KEYFILES_ROOT", tmp_path / "keyfiles")
+
+    code = run_cli(["rsa-generate", "--bits", "1024"])
+    result = json.loads(capsys.readouterr().out)
+
+    assert code == 0
+    private_key_file = tmp_path / "keyfiles" / "rsa" / "rsa_pri.pem"
+    public_key_file = tmp_path / "keyfiles" / "rsa" / "rsa_pub.pem"
+    assert private_key_file.exists()
+    assert public_key_file.exists()
+    assert result["data"]["private_key_file"] == str(private_key_file)
+    assert result["data"]["public_key_file"] == str(public_key_file)
+
+
+def test_cli_rsa_encrypt_uses_default_keyfiles(capsys, monkeypatch, tmp_path) -> None:
+    monkeypatch.setattr(key_io, "DEFAULT_KEYFILES_ROOT", tmp_path / "keyfiles")
+
+    gen_code = run_cli(["rsa-generate", "--bits", "1024"])
+    assert gen_code == 0
+    capsys.readouterr()
+
+    encrypt_code = run_cli(
+        [
+            "rsa-encrypt",
+            "--payload",
+            "hello-rsa",
+            "--input-encoding",
+            "utf8",
+            "--output",
+            "base64",
+        ]
+    )
+    encrypt_result = json.loads(capsys.readouterr().out)
+
+    assert encrypt_code == 0
+    assert encrypt_result["code"] == 200
+    assert encrypt_result["data"]["algorithm"] == "rsa"

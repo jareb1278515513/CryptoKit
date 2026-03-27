@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import argparse
 import json
-from pathlib import Path
 
+from cryptokit.infrastructure.key_io import get_default_key_path, read_key_text, save_keypair
 from cryptokit.interfaces.api import (
 	api_base64_decode,
 	api_base64_encode,
@@ -27,25 +27,38 @@ from cryptokit.interfaces.api import (
 )
 
 
-def _load_text_arg(inline_value: str | None, file_path: str | None, arg_name: str) -> str:
-	"""优先读取内联参数，否则从文件读取文本参数。
+def _load_key_text(
+	inline_value: str | None,
+	file_path: str | None,
+	arg_name: str,
+	algorithm: str,
+	key_kind: str,
+) -> str:
+	"""优先读取内联参数，否则从显式或默认文件读取密钥文本。
 
 	Args:
 		inline_value: 命令行内联参数值。
 		file_path: 文件路径参数。
 		arg_name: 参数名，用于错误提示。
+		algorithm: 算法名称，用于定位默认目录。
+		key_kind: 密钥类型，支持 private/public。
 
 	Returns:
 		str: 读取到的文本内容。
 
 	Raises:
-		ValueError: 内联值和文件路径均缺失时抛出。
+		ValueError: 无法解析有效密钥时抛出。
 	"""
 	if inline_value:
 		return inline_value
 	if file_path:
-		return Path(file_path).read_text(encoding="utf-8")
-	raise ValueError(f"参数 {arg_name} 不能为空")
+		return read_key_text(file_path)
+
+	default_path = get_default_key_path(algorithm, key_kind)
+	if default_path.exists():
+		return read_key_text(default_path)
+
+	raise ValueError(f"参数 {arg_name} 不能为空，且默认密钥文件不存在: {default_path}")
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -212,9 +225,17 @@ def run_cli(argv: list[str] | None = None) -> int:
 		)
 	elif args.command == "rsa-generate":
 		result = api_rsa_generate_keypair(bits=args.bits, trace=args.trace)
+		if result.ok and isinstance(result.data, dict):
+			result.data.update(
+				save_keypair(
+					"rsa",
+					private_key_pem=result.data["private_key_pem"],
+					public_key_pem=result.data["public_key_pem"],
+				)
+			)
 	elif args.command == "rsa-encrypt":
 		try:
-			public_key_pem = _load_text_arg(args.public_key_pem, args.public_key_file, "public_key")
+			public_key_pem = _load_key_text(args.public_key_pem, args.public_key_file, "public_key", "rsa", "public")
 			result = api_rsa_encrypt(
 				args.payload,
 				public_key_pem=public_key_pem,
@@ -229,7 +250,7 @@ def run_cli(argv: list[str] | None = None) -> int:
 			result = OperationResult.failure(StatusCode.INVALID_INPUT, str(exc))
 	elif args.command == "rsa-decrypt":
 		try:
-			private_key_pem = _load_text_arg(args.private_key_pem, args.private_key_file, "private_key")
+			private_key_pem = _load_key_text(args.private_key_pem, args.private_key_file, "private_key", "rsa", "private")
 			result = api_rsa_decrypt(
 				args.payload,
 				private_key_pem=private_key_pem,
@@ -244,7 +265,7 @@ def run_cli(argv: list[str] | None = None) -> int:
 			result = OperationResult.failure(StatusCode.INVALID_INPUT, str(exc))
 	elif args.command == "rsa-sign":
 		try:
-			private_key_pem = _load_text_arg(args.private_key_pem, args.private_key_file, "private_key")
+			private_key_pem = _load_key_text(args.private_key_pem, args.private_key_file, "private_key", "rsa", "private")
 			result = api_rsa_sign_sha1(
 				args.payload,
 				private_key_pem=private_key_pem,
@@ -259,7 +280,7 @@ def run_cli(argv: list[str] | None = None) -> int:
 			result = OperationResult.failure(StatusCode.INVALID_INPUT, str(exc))
 	elif args.command == "rsa-verify":
 		try:
-			public_key_pem = _load_text_arg(args.public_key_pem, args.public_key_file, "public_key")
+			public_key_pem = _load_key_text(args.public_key_pem, args.public_key_file, "public_key", "rsa", "public")
 			result = api_rsa_verify_sha1(
 				args.payload,
 				signature=args.signature,
@@ -275,9 +296,17 @@ def run_cli(argv: list[str] | None = None) -> int:
 			result = OperationResult.failure(StatusCode.INVALID_INPUT, str(exc))
 	elif args.command == "ecc-generate":
 		result = api_ecc_generate_keypair(trace=args.trace)
+		if result.ok and isinstance(result.data, dict):
+			result.data.update(
+				save_keypair(
+					"ecc",
+					private_key_pem=result.data["private_key_pem"],
+					public_key_pem=result.data["public_key_pem"],
+				)
+			)
 	elif args.command == "ecdsa-sign":
 		try:
-			private_key_pem = _load_text_arg(args.private_key_pem, args.private_key_file, "private_key")
+			private_key_pem = _load_key_text(args.private_key_pem, args.private_key_file, "private_key", "ecc", "private")
 			result = api_ecdsa_sign_sha1(
 				args.payload,
 				private_key_pem=private_key_pem,
@@ -292,7 +321,7 @@ def run_cli(argv: list[str] | None = None) -> int:
 			result = OperationResult.failure(StatusCode.INVALID_INPUT, str(exc))
 	elif args.command == "ecdsa-verify":
 		try:
-			public_key_pem = _load_text_arg(args.public_key_pem, args.public_key_file, "public_key")
+			public_key_pem = _load_key_text(args.public_key_pem, args.public_key_file, "public_key", "ecc", "public")
 			result = api_ecdsa_verify_sha1(
 				args.payload,
 				signature=args.signature,

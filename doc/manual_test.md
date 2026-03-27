@@ -188,12 +188,12 @@ uv run python main.py rsa-generate
 - 预期结果：
   - code 为 200
   - data.private_key_pem 和 data.public_key_pem 为非空 PEM 文本
+  - 项目根目录生成 `keyfiles/rsa/rsa_pri.pem` 与 `keyfiles/rsa/rsa_pub.pem`
 
-- RSA-SHA1 签名/验签（文件方式，便于粘贴）
+- RSA-SHA1 签名/验签（默认密钥文件）
 
 ```bash
-# 先将 rsa-generate 输出中的私钥与公钥分别保存为 /tmp/rsa_pri.pem /tmp/rsa_pub.pem
-uv run python main.py rsa-sign --payload hello --private-key-file /tmp/rsa_pri.pem
+uv run python main.py rsa-sign --payload hello
 ```
 
 - 预期结果：
@@ -202,7 +202,7 @@ uv run python main.py rsa-sign --payload hello --private-key-file /tmp/rsa_pri.p
 
 ```bash
 # 将上一步签名替换到 <sig>
-uv run python main.py rsa-verify --payload hello --signature <sig> --public-key-file /tmp/rsa_pub.pem
+uv run python main.py rsa-verify --payload hello --signature <sig>
 ```
 
 - 预期结果：
@@ -219,12 +219,12 @@ uv run python main.py ecc-generate
   - code 为 200
   - data.curve 为 nist-p160
   - data.private_key_pem 与 data.public_key_pem 为非空
+  - 项目根目录生成 `keyfiles/ecc/ecc_pri.pem` 与 `keyfiles/ecc/ecc_pub.pem`
 
-- ECDSA-SHA1 签名/验签（文件方式）：
+- ECDSA-SHA1 签名/验签（默认密钥文件）：
 
 ```bash
-# 先将 ecc-generate 输出中的私钥与公钥分别保存为 /tmp/ecc_pri.pem /tmp/ecc_pub.pem
-uv run python main.py ecdsa-sign --payload hello --private-key-file /tmp/ecc_pri.pem
+uv run python main.py ecdsa-sign --payload hello
 ```
 
 - 预期结果：
@@ -233,7 +233,7 @@ uv run python main.py ecdsa-sign --payload hello --private-key-file /tmp/ecc_pri
 
 ```bash
 # 将上一步签名替换到 <sig>
-uv run python main.py ecdsa-verify --payload hello --signature <sig> --public-key-file /tmp/ecc_pub.pem
+uv run python main.py ecdsa-verify --payload hello --signature <sig>
 ```
 
 - 预期结果：
@@ -281,15 +281,15 @@ uv run python main.py rsa-generate
 
 - 预期结果：
   - 返回 code=200，包含 public_key_pem/private_key_pem。
+  - 项目根目录生成 `keyfiles/rsa/rsa_pri.pem` 与 `keyfiles/rsa/rsa_pub.pem`。
 
 ```bash
-# 将私钥、公钥分别保存为 /tmp/rsa_pri.pem /tmp/rsa_pub.pem
-uv run python main.py rsa-sign --payload hello --private-key-file /tmp/rsa_pri.pem
+uv run python main.py rsa-sign --payload hello
 ```
 
 ```bash
 # 将签名替换到 <sig>
-uv run python main.py rsa-verify --payload hello --signature <sig> --public-key-file /tmp/rsa_pub.pem
+uv run python main.py rsa-verify --payload hello --signature <sig>
 ```
 
 - 预期结果：

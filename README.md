@@ -226,28 +226,30 @@ RSA-1024 密钥生成：
 uv run python main.py rsa-generate --bits 1024
 ```
 
+默认会写入项目根目录下的 `keyfiles/rsa/rsa_pri.pem` 与 `keyfiles/rsa/rsa_pub.pem`。
+
 RSA 加密：
 
 ```bash
-uv run python main.py rsa-encrypt --payload hello --public-key-file /tmp/rsa_pub.pem --input-encoding utf8 --output base64
+uv run python main.py rsa-encrypt --payload hello --input-encoding utf8 --output base64
 ```
 
 RSA 解密：
 
 ```bash
-uv run python main.py rsa-decrypt --payload <rsa密文base64> --private-key-file /tmp/rsa_pri.pem --input-encoding base64 --output utf8
+uv run python main.py rsa-decrypt --payload <rsa密文base64> --input-encoding base64 --output utf8
 ```
 
 RSA-SHA1 签名：
 
 ```bash
-uv run python main.py rsa-sign --payload hello --private-key-file /tmp/rsa_pri.pem --input-encoding utf8 --output base64
+uv run python main.py rsa-sign --payload hello --input-encoding utf8 --output base64
 ```
 
 RSA-SHA1 验签：
 
 ```bash
-uv run python main.py rsa-verify --payload hello --signature <rsa签名base64> --public-key-file /tmp/rsa_pub.pem --input-encoding utf8 --signature-encoding base64
+uv run python main.py rsa-verify --payload hello --signature <rsa签名base64> --input-encoding utf8 --signature-encoding base64
 ```
 
 ECC-160 密钥生成：
@@ -256,16 +258,18 @@ ECC-160 密钥生成：
 uv run python main.py ecc-generate --curve nist-p160
 ```
 
+默认会写入项目根目录下的 `keyfiles/ecc/ecc_pri.pem` 与 `keyfiles/ecc/ecc_pub.pem`。
+
 ECDSA-SHA1 签名：
 
 ```bash
-uv run python main.py ecdsa-sign --payload hello --private-key-file /tmp/ecc_pri.pem --input-encoding utf8 --output base64
+uv run python main.py ecdsa-sign --payload hello --input-encoding utf8 --output base64
 ```
 
 ECDSA-SHA1 验签：
 
 ```bash
-uv run python main.py ecdsa-verify --payload hello --signature <ecdsa签名base64> --public-key-file /tmp/ecc_pub.pem --input-encoding utf8 --signature-encoding base64
+uv run python main.py ecdsa-verify --payload hello --signature <ecdsa签名base64> --input-encoding utf8 --signature-encoding base64
 ```
 
 </details>
