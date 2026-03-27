@@ -13,3 +13,4 @@ doc/requirements/
 .obsidian
 keyfiles/
 doc/
+.DS_Store
