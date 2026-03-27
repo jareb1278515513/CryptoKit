@@ -175,7 +175,7 @@ def execute_base64_decode(command: TextTransformCommand) -> OperationResult:
     """
     try:
         return OperationResult.success(data={"value": utf8_decode(base64_decode(command.payload))})
-    except EncodingError as exc:
+    except (EncodingError, ValueError) as exc:
         return OperationResult.failure(StatusCode.ENCODING_ERROR, str(exc))
 
 

@@ -28,4 +28,5 @@ def test_utf8_encode_decode_hex() -> None:
 def test_base64_decode_invalid_payload() -> None:
     result = api_base64_decode("***")
     assert not result.ok
+    assert int(result.code) == 501
     assert result.message
